@@ -17,7 +17,7 @@ or Simulated Annealing or other local search based search strategies.
 
 METSlib is Open Source and is covered by the GNU GPL license or, at
 your opinion, by the Common Public License 1.0. Commercial licensing
-can be considered by the author upon request.
+or custom development can be considered by the author upon request.
 
 METSlib implements the basics of some metaheuristics algorithm:
 
@@ -27,6 +27,9 @@ METSlib implements the basics of some metaheuristics algorithm:
     * Simulated Annealing (with linear, exponential and custom cooling
       schedule)
     * Tabu Search.
+
+In its current state, the main focus of the library is on Tabu Search,
+other algorithm may have some rough edges.
 
 To use any algorithm you must implement an objective function, a
 neighborhood (move manager) and some moves.
@@ -44,33 +47,31 @@ This OO library was inspired by the OTS library released by the
 Coin-OR project, the concepts presented in that library have been
 adapted to C++, optimized for speed, and extended. 
 
-You may want to read http://code.100allora.it/metslib and
-http://code.100allora.it/metslib/wiki/QueensProblem wiki page for
-quick introductory tutorial.
+You may want to read http://projects.coin-or.org/metslib
 
 
 Complete API Documentation
 --------------------------
 
-    - http://code.100allora.it/docs/metslib/
+    - http://www.coin-or.org/metslib/docs/
 
 
 Sample programs
 ---------------
 
-    - http://code.100allora.it/metslib/wiki/KnapsackProblem
-    - http://code.100allora.it/metslib/wiki/QueensProblem
+    - http://projects.coin-or.org/metslib/wiki/KnapsackProblem
+    - http://projects.coin-or.org/metslib/wiki/QueensProblem
 
 
 Contact Information
 -------------------
 
-This library was used in different projects by two different
-developers and proved quite useful to implement a new model (or to
-adapt an old one) without re-inventing the wheel each time. At the
-same time it's young so I'll be happy to help you while implementing
-the nuts and bolts of your own model since documentation is still a
-work in progress.
+This library was used in different projects by different developers
+and proved quite useful to implement a new model (or to adapt an old
+one) without re-inventing the wheel each time you need to change the
+algorithm or the neighborhood. At the same time it's young so I'll be
+happy to help you while implementing the nuts and bolts of your own
+model since documentation is still a work in progress.
 
 Feel free to write an email to <mirko.maischberger@gmail.com>.
 
@@ -79,31 +80,37 @@ Need help? Willing to help?
 ---------------------------
 
 Join the mailing list
-http://lists.100allora.it/mailman/listinfo/metslib-dev 
+http://list.coin-or.org/mailman/listinfo/metslib 
 and start contributing
+
 
 Credits
 -------
 
-Automake template by: Murray Cumming <murrayc@usa.net> based on the
-GtkExtra-- project files created by Cedric Gustin
-<gustin@pcpm.ucl.ac.be>
+I'd like to thank all the people at the Global Optimization Laboratory
+(http://gol.dsi.unifi.it) for continuous support and the many useful
+discussions, in particular Fabio Schoen, Bernardetta Addis and Paola
+Cappanera.
+
+The automake template was borrowed from some projects by Murray
+Cumming <murrayc@usa.net> and Cedric Gustin <gustin@pcpm.ucl.ac.be>
+
 
 If you use the library you should cite it in your work:
 =======================================================
 
     - Mirko Maischberger, "METSlib metaheuristic framework version
-      0.4.2". [online] Available http://code.100allora.it/metslib,
+      0.4.3". [online] Available http://projects.coin-or.org/metslib,
       (the date you visited the site)
 
-    BibTex Entry (Use \usepackage{hyperref} in tex file.):      
+    BibTex Entry:
 
 @misc{metslib2008,
   author={Mirko Maischberger},
-  title={{METSlib} metaheuristic framework version 0.4.2},
-  month={December},
-  year={2008},
-  howpublished = {\url{http://code.100allora.it/metslib}},
+  title={{METSlib} metaheuristic framework version 0.4.3},
+  month={April},
+  year={2009},
+  howpublished = {http://projects.coin-or.org/metslib},
 }
 
 - Mirko Maischberger

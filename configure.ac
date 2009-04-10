@@ -2,7 +2,7 @@ dnl --------------------------------
 dnl Initialization macros.
 dnl --------------------------------
 
-AC_INIT([metslib], [0.4.2], [mirko.maischberger@gmail.com])
+AC_INIT([metslib], [0.4.3], [mirko.maischberger@gmail.com])
 AM_CONFIG_HEADER([metslib/config.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([config])
@@ -16,14 +16,30 @@ GENERIC_LIBRARY_NAME=metslib
 #release versioning
 GENERIC_MAJOR_VERSION=0
 GENERIC_MINOR_VERSION=4
-GENERIC_MICRO_VERSION=2
+GENERIC_MICRO_VERSION=3
 
 #API version (often = GENERIC_MAJOR_VERSION.GENERIC_MINOR_VERSION)
 GENERIC_API_VERSION=$GENERIC_MAJOR_VERSION.$GENERIC_MINOR_VERSION
 AC_SUBST(GENERIC_API_VERSION)
 
-#shared library versioning
-GENERIC_LIBRARY_VERSION=4:2:0
+# shared library versioning
+# =========================
+#
+# libtool library versions are described by three integers:
+# current
+#    The most recent interface number that this library implements.
+# revision
+#    The implementation number of the current interface.
+# age
+#    The difference between the newest and oldest interfaces that this
+#    library implements. In other words, the library implements all
+#    the interface numbers in the range from number current - age to
+#    current.
+#
+# If two libraries have identical current and age numbers, then the
+# dynamic linker chooses the library with the greater revision number.
+#
+GENERIC_LIBRARY_VERSION=4:3:0
 #                       | | |
 #                +------+ | +---+
 #                |        |     |
