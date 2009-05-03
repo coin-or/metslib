@@ -16,6 +16,8 @@
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 /// @mainpage METSlib
+///
+/// \image html http://www.coin-or.org/images/logo/COIN-OR_150.png
 /// 
 /// @section Introduction
 ///
