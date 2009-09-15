@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "metslib", "metslib.vcproj", "{062D70C7-0A76-4EE1-B91A-5F1EF055AE13}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tutorial", "..\..\Examples\stable\0.4\tutorial\tutorial.vcproj", "{26F24220-7367-4DA8-8769-9D484FA70817}"
+	ProjectSection(ProjectDependencies) = postProject
+		{062D70C7-0A76-4EE1-B91A-5F1EF055AE13} = {062D70C7-0A76-4EE1-B91A-5F1EF055AE13}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{062D70C7-0A76-4EE1-B91A-5F1EF055AE13}.Debug|Win32.ActiveCfg = Debug|Win32
+		{062D70C7-0A76-4EE1-B91A-5F1EF055AE13}.Debug|Win32.Build.0 = Debug|Win32
+		{062D70C7-0A76-4EE1-B91A-5F1EF055AE13}.Release|Win32.ActiveCfg = Release|Win32
+		{062D70C7-0A76-4EE1-B91A-5F1EF055AE13}.Release|Win32.Build.0 = Release|Win32
+		{26F24220-7367-4DA8-8769-9D484FA70817}.Debug|Win32.ActiveCfg = Debug|Win32
+		{26F24220-7367-4DA8-8769-9D484FA70817}.Debug|Win32.Build.0 = Debug|Win32
+		{26F24220-7367-4DA8-8769-9D484FA70817}.Release|Win32.ActiveCfg = Release|Win32
+		{26F24220-7367-4DA8-8769-9D484FA70817}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

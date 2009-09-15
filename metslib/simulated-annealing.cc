@@ -41,7 +41,7 @@ mets::simulated_annealing::search()
   move_manager::iterator movit;
   current_temp_m = starting_temp_m;
   while(!termination_criteria_m(working_solution_m, *this) 
-	and current_temp_m >= 0.0)
+        && current_temp_m >= 0.0)
     {
       gol_type actual_cost = working_solution_m.cost_function();
       moves_m.refresh(working_solution_m);

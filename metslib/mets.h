@@ -81,7 +81,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
-#ifdef __GXX_EXPERIMENTAL_CXX0X__
+#if defined (__GXX_EXPERIMENTAL_CXX0X__) || defined (WIN32)
 #  include <unordered_map>
 #  include <random>
 #else
@@ -287,7 +287,7 @@ namespace mets {
     { moves_m.push_back(m->clone()); }
 
     /// @brief Returns the number of attached moves
-    unsigned int 
+	size_t
     size() const 
     { return moves_m.size(); }
 
@@ -374,7 +374,7 @@ namespace mets {
 	for(unsigned int ii = 0; ii != moves_m.size(); ++ii)
 	  if(!(*moves_m[ii] == *other.moves_m[ii]))
 	    return false;
-      } catch (std::bad_cast& e) {
+      } catch (std::bad_cast&) {
 	// are not of the same type?
 	return false;
       }
@@ -447,7 +447,7 @@ namespace mets {
   /// @brief Functor class to permit hash_set of moves (used by tabu list)
   class mana_move_hash {
   public:
-    size_t operator()(const mana_move* const& mov) const 
+    size_t operator()(mana_move const* mov) const 
     {return mov->hash();}
   };
   

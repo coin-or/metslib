@@ -64,7 +64,7 @@ mets::tabu_search::search()
 	  // for each non-tabu move record the best one
 	  if(cost < best_move_cost)
 	    {
-	      if(!is_tabu or aspiration_criteria_met)
+		if(!is_tabu || aspiration_criteria_met)
 		{
 		  best_move_cost = cost;
 		  best_movit = current_move_m = movit;
@@ -182,8 +182,9 @@ mets::simple_tabu_list::tabu(feasible_solution& sol, /* const */ move& mov)
       elem->second--;
       if(elem->second == 0) 
 	{
-	  delete elem->first;
+	  mana_move* tmp = elem->first;
 	  tabu_hash_m.erase(elem);
+	  delete tmp;
 	}
       tabu_moves_m.pop_front();
     }
