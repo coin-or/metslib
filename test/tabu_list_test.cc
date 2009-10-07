@@ -8,7 +8,7 @@ class my_sol : public mets::feasible_solution
   mets::gol_type cost_function() const
   { return 0; }
 
-  mets::feasible_solution& operator=(const mets::feasible_solution&) 
+  void copy_from(const mets::feasible_solution&) 
   { }
 };
 

@@ -29,8 +29,9 @@
 ///
 /// The neighborhood can be specified implementing a mets::move_manager
 ///
-/// All the mentioned classes must be implemented to model the problem at hand.
-/// See as an example the "queens" and "knapsack" programs.
+/// All the mentioned classes must be implemented to model the problem
+/// at hand.  See as an example the "qap" and "tutorial" programs in
+/// the Examples directory.
 ///
 /// You are also responsible of configuring and running the correct
 /// algorithm.
@@ -71,6 +72,8 @@
 #ifndef METSLIB_H_
 #define METSLIB_H_
 
+#include "config.h"
+
 #include <list>
 #include <cmath>
 #include <deque>
@@ -81,12 +84,14 @@
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
-#if defined (__GXX_EXPERIMENTAL_CXX0X__) || defined (WIN32)
+#if defined HAVE_UNORDERED_MAP
 #  include <unordered_map>
 #  include <random>
-#else
+#elif defined HAVE_TR1_UNORDERED_MAP
 #  include <tr1/unordered_map>
 #  include <tr1/random>
+#else
+#  error "Unable to find TR1 extension. Please use a recent C++ compiler."
 #endif
 
 #include "observer.h"
@@ -161,14 +166,17 @@ namespace mets {
     virtual gol_type 
     cost_function() const = 0;
 
-    /// @brief Assignment operator.
+    /// @brief Assignment method.
     ///
-    /// The assigment operator is needed to save
-    /// the best solution so far.
+    /// This method is needed to save the best solution so far.
     ///
     /// You must implement this for your problem.
-    virtual feasible_solution& 
-    operator=(const feasible_solution& other) = 0;
+    ///
+    virtual void copy_from(const feasible_solution& other) = 0;
+
+    feasible_solution& 
+    operator=(const feasible_solution& other) 
+    { this->copy_from(other); return *this; }
   };
 
   /// @brief Move to be operated on a feasible solution.
