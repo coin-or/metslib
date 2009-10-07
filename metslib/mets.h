@@ -161,14 +161,17 @@ namespace mets {
     virtual gol_type 
     cost_function() const = 0;
 
-    /// @brief Assignment operator.
+    /// @brief Assignment method.
     ///
-    /// The assigment operator is needed to save
-    /// the best solution so far.
+    /// Needed to save the best solution so far.
     ///
     /// You must implement this for your problem.
-    virtual feasible_solution& 
-    operator=(const feasible_solution& other) = 0;
+    ///
+    virtual copy_from(const feasible_solution& other) = 0;
+
+    feasible_solution& 
+    operator=(const feasible_solution& other) 
+    { this->copy_from(other); return *this; }
   };
 
   /// @brief Move to be operated on a feasible solution.

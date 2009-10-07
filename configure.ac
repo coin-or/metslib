@@ -75,6 +75,7 @@ dnl -----------------------------------------------
 dnl Checks for programs.
 dnl -----------------------------------------------
 
+PKG_PROG_PKG_CONFIG(0.9)
 AC_PROG_CXX
 AM_PROG_LIBTOOL
 AM_SANITY_CHECK
@@ -82,6 +83,15 @@ AM_SANITY_CHECK
 AC_LANG_CPLUSPLUS
 
 
+dnl ---------------------------------------------
+dnl Check for TR1 headers
+dnl ---------------------------------------------
+
+AC_CHECK_HEADERS([tr1/unordered_map unordered_map])
+AC_TRY_COMPILE([#include <unordered_map>],
+               [namespace std::tr1::unordered_map;],
+	       [AC_DEFINE(TR1_MIXED_NAMESPACE, [], [Description])],
+               [])
 dnl ---------------------------------------------
 dnl Add option to turn off optimizations
 dnl ---------------------------------------------
