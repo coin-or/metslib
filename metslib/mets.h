@@ -30,7 +30,7 @@
 /// The neighborhood can be specified implementing a mets::move_manager
 ///
 /// All the mentioned classes must be implemented to model the problem at hand.
-/// See as an example the "queens" and "knapsack" programs.
+/// See as an example the "tutorial" and "qap" programs.
 ///
 /// You are also responsible of configuring and running the correct
 /// algorithm.
@@ -70,6 +70,20 @@
 ///
 #ifndef METSLIB_H_
 #define METSLIB_H_
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#else
+// If not using autotools let's make a rough guess
+#  if defined (WIN32)
+#    define HAVE_UNORDERED_MAP 1
+#    define TR1_MIXED_NAMESPACE 1
+#  elif defined (__GXX_EXPERIMENTAL_CXX0X__)
+#    define HAVE_UNORDERED_MAP 1
+#  else
+#    define HAVE_TR1_UNORDERED_MAP 1
+#  endif
+#endif
 
 #include <list>
 #include <cmath>
@@ -167,7 +181,8 @@ namespace mets {
     ///
     /// You must implement this for your problem.
     ///
-    virtual copy_from(const feasible_solution& other) = 0;
+    virtual void
+    copy_from(const feasible_solution& other) = 0;
 
     feasible_solution& 
     operator=(const feasible_solution& other) 

@@ -44,8 +44,7 @@ reusable and the algorithm where reviewed by more than one person and
 more than one time.
 
 This OO library was inspired by the OTS library released by the
-Coin-OR project, the concepts presented in that library have been
-adapted to C++, optimized for speed, and extended. 
+Coin-OR project.
 
 You may want to read http://projects.coin-or.org/metslib
 
@@ -59,9 +58,12 @@ Complete API Documentation
 Sample programs
 ---------------
 
-    - http://projects.coin-or.org/metslib/wiki/KnapsackProblem
-    - http://projects.coin-or.org/metslib/wiki/QueensProblem
+There is a quick Tabu Search tutorial here
+  - https://projects.coin-or.org/metslib/wiki/TabuSearchTutorial
 
+You can also look in the distributed examples (in the Examples
+subproject in svn).
+   
 
 Contact Information
 -------------------
@@ -108,7 +110,7 @@ If you use the library you should cite it in your work:
 @misc{metslib2008,
   author={Mirko Maischberger},
   title={{METSlib} metaheuristic framework version 0.4.3},
-  month={April},
+  month={October},
   year={2009},
   howpublished = {http://projects.coin-or.org/metslib},
 }
