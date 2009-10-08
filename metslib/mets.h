@@ -95,12 +95,14 @@
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
-#if defined (__GXX_EXPERIMENTAL_CXX0X__) || defined (WIN32)
+#if defined (HAVE_UNORDERED_MAP)
 #  include <unordered_map>
 #  include <random>
-#else
+#elif defined (HAVE_TR1_UNORDERED_MAP)
 #  include <tr1/unordered_map>
 #  include <tr1/random>
+#else
+#  pragma error "Unable to find unordered_map header file. Please use a recent C++ compiler supporting TR1 extension."
 #endif
 
 #include "observer.h"
@@ -818,7 +820,7 @@ namespace mets {
     double starting_temp_m;
     double current_temp_m;
     double K_m;
-#ifdef __GXX_EXPERIMENTAL_CXX0X__
+#if defined (HAVE_UNORDERED_MAP) && !defined (TR1_MIXED_NAMESPACE)
     std::uniform_real<> ureal;
     std::mt19937 rng;
     std::variate_generator< std::mt19937, std::uniform_real<> > gen;
