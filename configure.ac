@@ -87,7 +87,16 @@ dnl ---------------------------------------------
 dnl Check for TR1 headers
 dnl ---------------------------------------------
 
-AC_CHECK_HEADERS([tr1/unordered_map unordered_map])
+AC_CHECK_HEADERS([tr1/unordered_map unordered_map],
+                 [],
+                 [])
+
+if test $ac_cv_header_tr1_unordered_map = no; then
+   if test $ac_cv_header_unordered_map = no; then
+      AC_MSG_FAILURE([Unable to find <tr1/unordered_map> nor <unordered_map>, please use a recent C++ compiler supporting TR1 extension.])
+    fi
+fi
+
 AC_TRY_COMPILE([#include <unordered_map>],
                [namespace std::tr1::unordered_map;],
 	       [AC_DEFINE(TR1_MIXED_NAMESPACE, [], [Description])],
