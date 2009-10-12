@@ -1,6 +1,6 @@
 ## Source directory
 
-h_sources = mets.h observer.h
+h_sources = mets.h observer.h config.h metslib_config.h
 cc_sources = mets.cc tabu-search.cc simulated-annealing.cc \
 	local-search.cc
 
@@ -12,3 +12,4 @@ INCLUDES = -I$(top_srcdir)
 lib_LTLIBRARIES= libmetslib.la
 libmetslib_la_SOURCES= $(h_sources) $(cc_sources)
 libmetslib_la_LDFLAGS= -version-info $(GENERIC_LIBRARY_VERSION) -release $(GENERIC_RELEASE)
+
