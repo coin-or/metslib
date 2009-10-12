@@ -135,6 +135,7 @@ dnl -----------------------------------------------
 
 AC_OUTPUT(Makefile \
           metslib.pc \
-          metslib/Makefile 
-	  test/Makefile
+          metslib/Makefile \
+          doxydoc/Makefile \
+	  test/Makefile \
 )

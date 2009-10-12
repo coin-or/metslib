@@ -8,6 +8,7 @@
 /README -text
 /autogen.sh -text
 /configure.ac -text
+doxydoc/Makefile.am -text
 doxydoc/doxygen-footer.html -text
 doxydoc/doxygen.conf -text
 /metslib.pc.in -text
