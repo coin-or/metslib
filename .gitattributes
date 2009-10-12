@@ -2,14 +2,14 @@
 /AUTHORS -text
 /COPYING -text
 /ChangeLog -text
-/Doxyfile -text
 /INSTALL -text
 /Makefile.am -text
 /NEWS -text
 /README -text
 /autogen.sh -text
 /configure.ac -text
-doc/doxygen-footer.html -text
+doxydoc/doxygen-footer.html -text
+doxydoc/doxygen.conf -text
 /metslib.pc.in -text
 /metslib.sln -text
 /metslib.vcproj -text
