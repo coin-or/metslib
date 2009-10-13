@@ -18,6 +18,7 @@ metslib/Makefile.am -text
 metslib/local-search.cc -text
 metslib/mets.cc -text
 metslib/mets.h -text
+metslib/metslib_config.h -text
 metslib/observer.h -text
 metslib/simulated-annealing.cc -text
 metslib/tabu-search.cc -text
