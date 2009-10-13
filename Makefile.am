@@ -18,7 +18,7 @@ install-exec-local:
 	echo "#ifndef HAVE_CONFIG_H" >bla
 	echo "#define HAVE_CONFIG_H" >>bla
 	echo "#endif" >> bla
-	cat $(GENERIC_LIBRARY_NAME)/$(ConfigHeader) >> bla
+	cat $(srcdir)/$(GENERIC_LIBRARY_NAME)/$(ConfigHeader) >> bla
 	$(install_sh_DATA) bla $(DESTDIR)$(includedir)/$(GENERIC_LIBRARY_NAME)-$(GENERIC_API_VERSION)/$(GENERIC_LIBRARY_NAME)/$(ConfigHeader)
 	rm -f bla
 
