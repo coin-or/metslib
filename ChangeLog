@@ -1,0 +1,24 @@
+2009-09-07 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* metslib/mets.h: replaced pure virtual operator= from
+	feasible_solution with a (less error prone) copy_from method.
+
+2009-04-04 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* *: project moved to coin-or.
+
+2007-12-23 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* metslib/mets.h, metslib/tabu-search.cc: removed dependency from
+	<ext/*> of GCC (using real tr1 now), this should now compile con
+	Visual Studio as well with few modifications. Removed old unused
+	code.
+
+2007-11-30 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* all: 0.4.1, first public release
+
+2007-11-10 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* all: 0.4.0 
+
+2007-11-10 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* all: Code cleaning
+
+2006-11-21 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* all: Initial import
