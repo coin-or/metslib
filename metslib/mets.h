@@ -29,8 +29,8 @@
 ///
 /// The neighborhood can be specified implementing a mets::move_manager
 ///
-/// All the mentioned classes must be implemented to model the problem at hand.
-/// See as an example the "tutorial" and "qap" programs.
+/// All the mentioned classes must be implemented to model the problem
+/// at hand.  See as an example the "tutorial" and "qap" programs.
 ///
 /// You are also responsible of configuring and running the correct
 /// algorithm.
@@ -44,7 +44,17 @@
 /// decorators are provided with the library, some problems may need
 /// customary tabu lists, termination criterias and cooling schedules.
 /// 
-///  The implemented algorithms are:
+/// The framework you must implement your model into is made of:
+///
+/// - mets::feasible_solution
+///   - mets::permutation_problem
+/// - mets::move
+///   - mets::mana_move
+///   - mets::swap_elements
+/// - mets::move_manager
+///   - mets::swap_neighborhood
+///
+/// The toolkit of implemented algorithms is made of:
 ///
 /// - mets::local_search
 ///   - mets::move_manager
@@ -90,7 +100,7 @@
 #  include <tr1/unordered_map>
 #  include <tr1/random>
 #else
-#  pragma error "Unable to find unordered_map header file. Please use a recent C++ compiler supporting TR1 extension."
+#  error "Unable to find unordered_map header file. Please use a recent C++ compiler supporting TR1 extension."
 #endif
 
 #include "observer.h"
@@ -110,8 +120,8 @@ namespace mets {
   ///
   typedef double gol_type;
 
-  /// @brief Exception risen when some algorithm has no
-  /// more moves to make.
+  /// @brief Exception risen when some algorithm has no more moves to
+  /// make.
   class no_moves_error 
     : public std::runtime_error
   {
@@ -122,8 +132,7 @@ namespace mets {
       : std::runtime_error(message) {}
   };
 
-  /// @brief A sequence function object useful as an
-  /// STL generator.
+  /// @brief A sequence function object useful as an STL generator.
   ///
   /// Returns start, start+1, ... 
   ///
@@ -134,8 +143,8 @@ namespace mets {
     sequence(int start = 0) 
       : value_m(start) 
     { }
-    /// @brief Subscript operator. Each call increments the
-    /// value of the sequence.
+    /// @brief Subscript operator. Each call increments the value of
+    /// the sequence.
     int operator()() 
     { return value_m++; }
   protected:
@@ -145,8 +154,8 @@ namespace mets {
   /// @defgroup model Model
   /// @{
 
-  /// @brief interface of a feasible solution space to
-  /// be searched with tabu search.
+  /// @brief interface of a feasible solution space to be searched
+  /// with tabu search.
   class feasible_solution
   {
   public:
@@ -162,6 +171,7 @@ namespace mets {
     /// tries to minimize.
     ///
     /// You must implement this for your problem.
+    ///
     virtual gol_type 
     cost_function() const = 0;
 
@@ -179,16 +189,102 @@ namespace mets {
     { this->copy_from(other); return *this; }
   };
 
+
+  /// @brief An abstract permutation problem.
+  ///
+  /// The permutation problem provides a skeleton to rapidly prototype
+  /// permutation problems (such as Assignment problem, Quadratic AP,
+  /// TSP, and so on). The skeleton holds a pi_m variable that, at
+  /// each step, contains a permutation of the numbers in [0..n-1].
+  ///
+  /// A few operators are provided to randomly choose a solution, to
+  /// perturbate a solution with some random swaps and to simply swap
+  /// two items in the list.
+  ///
+  /// You still need to provide your own
+  /// mets::feasible_solution::cost_function() implementation.
+  ///
+  /// @see mets::swap_elements
+  class permutation_problem: public feasible_solution 
+  {
+  public:
+    /// @brief Inizialize pi_m = {0, 1, 2, ..., n-1}.
+    permutation_problem(int n) : pi_m(n)
+    { std::generate(pi_m.begin(), pi_m.end(), sequence(0)); }
+
+    /// @brief Copy from another permutation problem, if you introduce
+    /// new member variables remember to override this and to call
+    /// permutation_problem::copy_from in the overriding code.
+    ///
+    /// @param other the problem to copy from
+    void copy_from(const feasible_solution& other) 
+    {
+      const permutation_problem& o = 
+	dynamic_cast<const permutation_problem&>(other);
+      pi_m = o.pi_m;
+    }
+
+    /// @brief The size of the problem
+    virtual size_t 
+    size() 
+    { return pi_m.size(); }
+
+    /// @brief: swap move
+    ///
+    /// Override this for delta evaluation of the cost function.
+    virtual void
+    swap(int i, int j)
+    { std::swap(pi_m[i], pi_m[j]); }
+    
+  protected:
+    std::vector<int> pi_m;
+
+    template<typename random_generator> 
+    friend void random_shuffle(permutation_problem& p, random_generator& rng);
+  };
+
+
+  /// @brief Shuffle a permutation problem (generates a random starting point).
+  ///
+  /// @see mets::permutation_problem
+  template<typename random_generator>
+  void random_shuffle(permutation_problem& p, random_generator& rng)
+  {
+    std::tr1::uniform_int<> unigen(0, p.pi_m.size());
+    std::tr1::variate_generator<random_generator, 
+      std::tr1::uniform_int<> >gen(rng, unigen);
+    std::random_shuffle(p.pi_m.begin(), p.pi_m.end(), gen);
+  }
+  
+  /// @brief Perturbate a problem with n swap moves.
+  ///
+  /// @see mets::permutation_problem
+  template<typename random_generator>
+  void perturbate(permutation_problem& p, unsigned int n, random_generator& rng)
+  {
+    std::tr1::uniform_int<> int_range;
+    for(unsigned int ii=0; ii!=n;++ii) 
+      {
+	int p1 = int_range(rng, p.size());
+	int p2 = int_range(rng, p.size());
+	while(p1 == p2) 
+	  p2 = int_range(rng, p.size());
+	p.swap(p1, p2);
+      }
+  }
+    
+
+
   /// @brief Move to be operated on a feasible solution.
   ///
-  /// You must implement this (one or more types are allowed) 
-  /// for your problem.
+  /// You must implement this (one or more types are allowed) for your
+  /// problem.
   ///
   /// You must provide an apply as well as an unapply method.
   ///
-  /// The unapply method should do the reverse of the apply
-  /// or, if this is too complex, should return the solution
-  /// prior to the last apply was called.
+  /// The unapply method should do the reverse of the apply or, if
+  /// this is too complex, should return the solution prior to the
+  /// last apply was called.
   class move
   {
   public:
@@ -234,6 +330,76 @@ namespace mets {
     virtual size_t
     hash() const = 0;
   };
+
+
+  template<typename rngden> class swap_neighborhood; // fw decl
+
+  /// @brief A mets::mana_move that swaps two elements in a
+  /// mets::permutation_problem.
+  ///
+  /// Each instance swaps two specific objects.
+  ///
+  /// @see mets::permutation_problem, mets::mana_move
+  ///
+  class swap_elements : public mets::mana_move 
+  {
+  public:  
+
+    /// @brief A move that swaps from and to.
+    swap_elements(int from, int to) 
+      : p1(std::min(from,to)), p2(std::max(from,to)) 
+    { }
+    
+    /// @brief Virtual method that applies the move on a point
+    void
+    apply(mets::feasible_solution& s)
+    {
+      permutation_problem& sol = reinterpret_cast<permutation_problem&>(s);
+      sol.swap(p1, p2);
+    }
+    
+    /// @brief Unapply the last move: in case of a swap the inverse move
+    /// is just the same swap.
+    void
+    unapply(mets::feasible_solution& s)
+    {
+      this->apply(s);
+    }
+    
+    /// @brief A method to clone self. Needed to insert the move in a
+    /// tabu list.
+    mana_move* 
+    clone() const 
+    { return new swap_elements(p1, p2); }
+    
+    /// @brief An hash function used by the tabu list (the hash value is
+    /// used to insert the move in an hash set).
+    size_t
+    hash() const
+    { return (p1)<<16^(p2); }
+    
+    /// @brief Comparison operator used to tell if this move is equal to
+    /// a move in the tabu list.
+    bool 
+    operator==(const mets::mana_move& o) const
+    {
+      try {
+	const swap_elements& other = 
+	  dynamic_cast<const swap_elements&>(o);
+	return (this->p1 == other.p1 && this->p2 == other.p2);
+      } catch (std::bad_cast& e) {
+	return false;
+      }
+    }
+    
+  protected:
+    int p1; ///< the first element to swap
+    int p2; ///< the second element to swap
+
+    template <typename> 
+    friend class swap_neighborhood;
+  };
+
   
   /// @brief A complex move.
   ///
@@ -444,12 +610,106 @@ namespace mets {
     { return moves_m.size(); }
 
   protected:
-    std::deque<move*> moves_m;
+    std::deque<move*> moves_m; ///< The moves queue
 
   private:
     move_manager(const move_manager&);
   };
   
+
+  /// @brief Generates a stochastic subset of the neighborhood.
+  template<typename random_generator = std::tr1::minstd_rand0>
+  class swap_neighborhood : public mets::move_manager
+  {
+  public:
+    /// @brief A neighborhood exploration strategy for mets::swap_elements.
+    ///
+    /// This strategy selects *moves* random swaps and *complex_moves*
+    /// random double swaps.
+    ///
+    /// @param r a random number generator (e.g. an instance of
+    /// std::tr1::minstd_rand0 or std::tr1::mt19936)
+    ///
+    /// @param moves the number of swaps to add to the exploration
+    ///
+    /// @param complex_moves the number of random double swaps to add
+    /// to the exploration
+    ///
+    swap_neighborhood(random_generator& r, 
+		      unsigned int moves, 
+		      unsigned int complex_moves)
+      : mets::move_manager(), rng(r), int_range(0), n(moves), nc(complex_moves)
+    { 
+      // n simple moves
+      for(unsigned int ii = 0; ii != n; ++ii) 
+	moves_m.push_back(new swap_elements(0,0));
+      
+      // nc double moves
+      for(unsigned int ii = 0; ii != nc; ++ii) 
+	{
+	  mets::complex_mana_move& cm = *new mets::complex_mana_move(2);
+	  cm[0] = new swap_elements(0,0);
+	  cm[1] = new swap_elements(0,0);
+	  moves_m.push_back(&cm);
+	}
+    }  
+
+    /// @brief Dtor.
+    ~swap_neighborhood()
+    {
+      // delete all moves
+      for(iterator ii = begin(); ii != end(); ++ii)
+	delete (*ii);
+    }
+
+    /// @brief Selects a different set of moves at each iteration.
+    void refresh(mets::feasible_solution& s)
+    {
+      permutation_problem& sol = dynamic_cast<permutation_problem&>(s);
+      iterator ii = begin();
+      
+      // the first n are simple qap_moveS
+      for(unsigned int cnt = 0; cnt != n; ++cnt)
+	{
+	  swap_elements* m = static_cast<swap_elements*>(*ii);
+	  randomize_move(*m, sol.size());
+	  ++ii;
+	}
+      
+      // the following nc are complex_mana_moves made of 2 qap_moveS
+      for(unsigned int cnt = 0; cnt != nc; ++cnt)
+	{
+	  mets::complex_mana_move& cm = 
+	    static_cast<mets::complex_mana_move&>(**ii);
+	  for(int jj = 0; jj != 2; ++jj)
+	    {
+	      swap_elements* m = static_cast<swap_elements*>(cm[jj]);
+	      randomize_move(*m, sol.size());
+	    }
+	  ++ii;
+	}
+      
+    }
+    
+  protected:
+    random_generator& rng;
+    std::tr1::uniform_int<> int_range;
+    unsigned int n;
+    unsigned int nc;
+
+    void randomize_move(swap_elements& m, unsigned int size)
+    {
+      int p1 = int_range(rng, size);
+      int p2 = int_range(rng, size);
+      while(p1 == p2) 
+	p2 = int_range(rng, size);
+      // we are friend, so we know how to handle the nuts&bolts of
+      // swap_elements
+      m.p1 = std::min(p1,p2); 
+      m.p2 = std::max(p1,p2); 
+    }
+  };
+
   /// @}
 
   /// @brief Functor class to permit hash_set of moves (used by tabu list)
