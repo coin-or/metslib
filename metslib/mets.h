@@ -217,12 +217,7 @@ namespace mets {
     /// permutation_problem::copy_from in the overriding code.
     ///
     /// @param other the problem to copy from
-    void copy_from(const feasible_solution& other) 
-    {
-      const permutation_problem& o = 
-	dynamic_cast<const permutation_problem&>(other);
-      pi_m = o.pi_m;
-    }
+    void copy_from(const feasible_solution& other);
 
     /// @brief The size of the problem
     virtual size_t 
@@ -353,18 +348,14 @@ namespace mets {
     /// @brief Virtual method that applies the move on a point
     void
     apply(mets::feasible_solution& s)
-    {
-      permutation_problem& sol = reinterpret_cast<permutation_problem&>(s);
-      sol.swap(p1, p2);
-    }
+    { permutation_problem& sol = reinterpret_cast<permutation_problem&>(s);
+      sol.swap(p1, p2); }
     
     /// @brief Unapply the last move: in case of a swap the inverse move
     /// is just the same swap.
     void
     unapply(mets::feasible_solution& s)
-    {
-      this->apply(s);
-    }
+    { this->apply(s); }
     
     /// @brief A method to clone self. Needed to insert the move in a
     /// tabu list.
@@ -381,16 +372,7 @@ namespace mets {
     /// @brief Comparison operator used to tell if this move is equal to
     /// a move in the tabu list.
     bool 
-    operator==(const mets::mana_move& o) const
-    {
-      try {
-	const swap_elements& other = 
-	  dynamic_cast<const swap_elements&>(o);
-	return (this->p1 == other.p1 && this->p2 == other.p2);
-      } catch (std::bad_cast& e) {
-	return false;
-      }
-    }
+    operator==(const mets::mana_move& o) const;
     
   protected:
     int p1; ///< the first element to swap
@@ -421,34 +403,17 @@ namespace mets {
     explicit
     complex_mana_move(int n = 0) 
       : mana_move(), moves_m(n)
-    {
-      for(unsigned int ii = 0; ii != moves_m.size(); ++ii)
-	moves_m[ii] = 0;
-    }
+    {  for(move_list_t::iterator it(moves_m.begin()); it!=moves_m.end(); ++it)
+	*it = 0; }
 
     /// @brief Copy ctor, clones all the included moves.
     ///
     /// NB: before copying a complex_mana_move be sure to have
     /// assigned valid moves to each slot.
-    complex_mana_move(const complex_mana_move& o) 
-      : mana_move(), moves_m(o.moves_m.size())
-    {
-      for(unsigned int ii = 0; ii != moves_m.size(); ++ii)
-	{
-	  if(o.moves_m[ii])
-	    moves_m[ii] = o.moves_m[ii]->clone();
-	}
-    }
+    complex_mana_move(const complex_mana_move& o);
     
     /// @brief Dtor.
-    ~complex_mana_move()
-    {
-      for(move_list_t::iterator ii = moves_m.begin();
-	  ii != moves_m.end(); ++ii)
-	{
-	  if(*ii) delete *ii;
-	}
-    }
+    ~complex_mana_move();
     
     /// @brief Append a new move to the list.
     ///
@@ -472,16 +437,12 @@ namespace mets {
     /// the previous pointer, if it's not null.
     mana_move*&
     operator[](unsigned int ii)
-    {
-      return moves_m[ii];
-    }
+    { return moves_m[ii]; }
 
     /// @brief Returns a const pointer to the ii-th move.
     const mana_move*
     operator[](unsigned int ii) const
-    {
-      return moves_m[ii];
-    }
+    { return moves_m[ii]; }
 
     /// @brief Applies all the moves at once.
     /// 
@@ -491,14 +452,7 @@ namespace mets {
     /// segfault will alert you. No check is made for performance
     /// reason, be sure to have all valid moves.
     void
-    apply(mets::feasible_solution& s)
-    {
-      for(move_list_t::iterator ii = moves_m.begin();
-	  ii != moves_m.end(); ++ii)
-	{
-	  (*ii)->apply(s);
-	}
-    }
+    apply(mets::feasible_solution& s);
     
     /// @brief Unapplies all the moves at once (in reverse order)
     /// 
@@ -508,14 +462,7 @@ namespace mets {
     /// segfault will alert you. No check is made for performance
     /// reason, be sure to have all valid moves.
     void
-    unapply(mets::feasible_solution& s)
-    {
-      for(move_list_t::reverse_iterator ii = moves_m.rbegin();
-	  ii != moves_m.rend(); ++ii)
-	{
-	  (*ii)->apply(s);
-	}
-    }
+    unapply(mets::feasible_solution& s);
     
     /// @brief Clone this complex move (cloning all the included moves)
     mana_move* 
@@ -524,37 +471,10 @@ namespace mets {
     
     /// @brief Create an hash number xoring the hashes of the included moves
     size_t
-    hash() const
-    {
-      size_t v = 0;
-      for(move_list_t::const_iterator ii = moves_m.begin();
-	  ii != moves_m.end(); ++ii)
-	{
-	  v ^= (*ii)->hash();
-	}
-      return v; 
-    }
+    hash() const;
 
     /// @brief Compare two mets::complex_mana_moves for equality
-    bool operator==(const mana_move& o) const
-    {
-      try {
-	const complex_mana_move& other = 
-	  dynamic_cast<const complex_mana_move&>(o);
-	// different length?
-	if(moves_m.size() != other.moves_m.size()) 
-	  return false;
-	// have at least one different move?
-	for(unsigned int ii = 0; ii != moves_m.size(); ++ii)
-	  if(!(*moves_m[ii] == *other.moves_m[ii]))
-	    return false;
-      } catch (std::bad_cast&) {
-	// are not of the same type?
-	return false;
-      }
-      // if we reach, we are equal
-      return true;
-    }
+    bool operator==(const mana_move& o) const;
   };
   
   
@@ -637,59 +557,13 @@ namespace mets {
     ///
     swap_neighborhood(random_generator& r, 
 		      unsigned int moves, 
-		      unsigned int complex_moves)
-      : mets::move_manager(), rng(r), int_range(0), n(moves), nc(complex_moves)
-    { 
-      // n simple moves
-      for(unsigned int ii = 0; ii != n; ++ii) 
-	moves_m.push_back(new swap_elements(0,0));
-      
-      // nc double moves
-      for(unsigned int ii = 0; ii != nc; ++ii) 
-	{
-	  mets::complex_mana_move& cm = *new mets::complex_mana_move(2);
-	  cm[0] = new swap_elements(0,0);
-	  cm[1] = new swap_elements(0,0);
-	  moves_m.push_back(&cm);
-	}
-    }  
+		      unsigned int complex_moves);
 
     /// @brief Dtor.
-    ~swap_neighborhood()
-    {
-      // delete all moves
-      for(iterator ii = begin(); ii != end(); ++ii)
-	delete (*ii);
-    }
+    ~swap_neighborhood();
 
     /// @brief Selects a different set of moves at each iteration.
-    void refresh(mets::feasible_solution& s)
-    {
-      permutation_problem& sol = dynamic_cast<permutation_problem&>(s);
-      iterator ii = begin();
-      
-      // the first n are simple qap_moveS
-      for(unsigned int cnt = 0; cnt != n; ++cnt)
-	{
-	  swap_elements* m = static_cast<swap_elements*>(*ii);
-	  randomize_move(*m, sol.size());
-	  ++ii;
-	}
-      
-      // the following nc are complex_mana_moves made of 2 qap_moveS
-      for(unsigned int cnt = 0; cnt != nc; ++cnt)
-	{
-	  mets::complex_mana_move& cm = 
-	    static_cast<mets::complex_mana_move&>(**ii);
-	  for(int jj = 0; jj != 2; ++jj)
-	    {
-	      swap_elements* m = static_cast<swap_elements*>(cm[jj]);
-	      randomize_move(*m, sol.size());
-	    }
-	  ++ii;
-	}
-      
-    }
+    void refresh(mets::feasible_solution& s);
     
   protected:
     random_generator& rng;
@@ -697,23 +571,14 @@ namespace mets {
     unsigned int n;
     unsigned int nc;
 
-    void randomize_move(swap_elements& m, unsigned int size)
-    {
-      int p1 = int_range(rng, size);
-      int p2 = int_range(rng, size);
-      while(p1 == p2) 
-	p2 = int_range(rng, size);
-      // we are friend, so we know how to handle the nuts&bolts of
-      // swap_elements
-      m.p1 = std::min(p1,p2); 
-      m.p2 = std::max(p1,p2); 
-    }
+    void randomize_move(swap_elements& m, unsigned int size);
   };
 
   /// @}
 
   /// @brief Functor class to permit hash_set of moves (used by tabu list)
-  class mana_move_hash {
+  class mana_move_hash 
+  {
   public:
     size_t operator()(mana_move const* mov) const 
     {return mov->hash();}
@@ -898,7 +763,7 @@ namespace mets {
     get_move_manager() 
     { return moves_m; }
 
-   /// @brief The current step of the algorithm
+    /// @brief The current step of the algorithm
     ///        for use of the observers.
     ///        
     /// When you implement a new type of search you should set step_m
@@ -1563,5 +1428,77 @@ namespace mets {
 
 /// @brief Operator<< for moves.
 std::ostream& operator<<(std::ostream& os, const mets::move& mov);
+
+//________________________________________________________________________
+template<typename random_generator>
+mets::swap_neighborhood<random_generator>::swap_neighborhood(random_generator& r, 
+							     unsigned int moves, 
+							     unsigned int complex_moves)
+  : mets::move_manager(), rng(r), int_range(0), n(moves), nc(complex_moves)
+{ 
+  // n simple moves
+  for(unsigned int ii = 0; ii != n; ++ii) 
+    moves_m.push_back(new swap_elements(0,0));
+  
+  // nc double moves
+  for(unsigned int ii = 0; ii != nc; ++ii) 
+    {
+      mets::complex_mana_move& cm = *new mets::complex_mana_move(2);
+      cm[0] = new swap_elements(0,0);
+      cm[1] = new swap_elements(0,0);
+      moves_m.push_back(&cm);
+    }
+}  
+
+template<typename random_generator>
+mets::swap_neighborhood<random_generator>::~swap_neighborhood()
+{
+  // delete all moves
+  for(iterator ii = begin(); ii != end(); ++ii)
+    delete (*ii);
+}
+
+template<typename random_generator>
+void
+mets::swap_neighborhood<random_generator>::refresh(mets::feasible_solution& s)
+{
+  permutation_problem& sol = dynamic_cast<permutation_problem&>(s);
+  iterator ii = begin();
+  
+  // the first n are simple qap_moveS
+  for(unsigned int cnt = 0; cnt != n; ++cnt)
+    {
+      swap_elements* m = static_cast<swap_elements*>(*ii);
+      randomize_move(*m, sol.size());
+      ++ii;
+    }
+  
+  // the following nc are complex_mana_moves made of 2 qap_moveS
+  for(unsigned int cnt = 0; cnt != nc; ++cnt)
+    {
+      mets::complex_mana_move& cm = 
+	static_cast<mets::complex_mana_move&>(**ii);
+      for(int jj = 0; jj != 2; ++jj)
+	{
+	  swap_elements* m = static_cast<swap_elements*>(cm[jj]);
+	  randomize_move(*m, sol.size());
+	}
+      ++ii;
+    }
+}
+
+template<typename random_generator>
+void
+mets::swap_neighborhood<random_generator>::randomize_move(swap_elements& m, unsigned int size)
+{
+  int p1 = int_range(rng, size);
+  int p2 = int_range(rng, size);
+  while(p1 == p2) 
+    p2 = int_range(rng, size);
+  // we are friend, so we know how to handle the nuts&bolts of
+  // swap_elements
+  m.p1 = std::min(p1,p2); 
+  m.p2 = std::max(p1,p2); 
+}
 
 #endif
