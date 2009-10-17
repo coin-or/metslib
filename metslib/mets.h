@@ -574,6 +574,38 @@ namespace mets {
     void randomize_move(swap_elements& m, unsigned int size);
   };
 
+  /// @brief Generates a the full swap neighborhood.
+  class swap_full_neighborhood : public mets::move_manager
+  {
+  public:
+    /// @brief A neighborhood exploration strategy for mets::swap_elements.
+    ///
+    /// This strategy selects *moves* random swaps and *complex_moves*
+    /// random double swaps.
+    ///
+    /// @param r a random number generator (e.g. an instance of
+    /// std::tr1::minstd_rand0 or std::tr1::mt19936)
+    ///
+    /// @param moves the number of swaps to add to the exploration
+    ///
+    /// @param complex_moves the number of random double swaps to add
+    /// to the exploration
+    ///
+    swap_full_neighborhood(int size) : move_manager()
+    {
+      for(int ii(0); ii!=size-1; ++ii)
+	for(int jj(ii+1); jj!=size; ++jj)
+	  moves_m.push_back(new swap_elements(ii,jj));
+    } 
+
+    /// @brief Dtor.
+    ~swap_full_neighborhood() { }
+
+    /// @brief Selects a different set of moves at each iteration.
+    void refresh(mets::feasible_solution& s) { }
+
+  };
+
   /// @}
 
   /// @brief Functor class to permit hash_set of moves (used by tabu list)
@@ -631,6 +663,14 @@ namespace mets {
     /// @return True if we shoud terminate
     virtual bool 
     operator()(feasible_solution& fs, abstract_search& ts);
+
+    /// @brief Alternate function that decides if we shoud terminate the
+    /// search process
+    ///
+    /// @param fs The current working solution.
+    /// @return True if we shoud terminate
+    virtual bool 
+    operator()(feasible_solution& fs);
 
     virtual void reset() = 0;
 
@@ -1350,6 +1390,15 @@ namespace mets {
       --iterations_m;
       return termination_criteria_chain::operator()(fs, ts); 
     }
+    bool 
+    operator()(feasible_solution& fs)
+    { 
+      if (iterations_m <= 0) 
+	  return true; 
+
+      --iterations_m;
+      return termination_criteria_chain::operator()(fs); 
+    }
     void reset() { iterations_m = max_m; }
   protected:
     int max_m;
@@ -1370,21 +1419,41 @@ namespace mets {
       : termination_criteria_chain(),
 	best_cost_m(std::numeric_limits<gol_type>::max()), 
 	max_noimprove_m(max), 
-	iterations_left_m(max) {}
+	iterations_left_m(max),
+	total_iterations_m(0),
+	resets_m(0),
+	second_guess_m(0)
+    {}
     noimprove_termination_criteria(termination_criteria_chain* next,
 				   int max) 
       : termination_criteria_chain(next),
 	best_cost_m(std::numeric_limits<gol_type>::max()), 
 	max_noimprove_m(max), 
-	iterations_left_m(max) {}
+	iterations_left_m(max),
+	total_iterations_m(0),
+	resets_m(0),
+	second_guess_m(0)
+    {}
 
     bool 
     operator()(feasible_solution& fs, abstract_search& ts);
-    void reset() { iterations_left_m = max_noimprove_m; }
+    bool 
+    operator()(feasible_solution& fs);
+    void reset() 
+    { iterations_left_m = max_noimprove_m; 
+      second_guess_m = total_iterations_m = resets_m = 0; 
+      best_cost_m = std::numeric_limits<gol_type>::max();
+    }
+    int second_guess() { return second_guess_m; }
+    int iteration() { return total_iterations_m; }
+    int resets() { return resets_m; }
   protected:
     gol_type best_cost_m;
     int max_noimprove_m;
     int iterations_left_m;
+    int total_iterations_m;
+    int resets_m;
+    int second_guess_m;
   };
 
   /// @brief Termination criteria based on cost value
@@ -1413,6 +1482,15 @@ namespace mets {
 	return true; 
 
       return termination_criteria_chain::operator()(fs, ts); 
+    }
+
+    bool 
+    operator()(feasible_solution& fs)
+    { 
+      if(fs.cost_function() <= level_m) 
+	return true; 
+
+      return termination_criteria_chain::operator()(fs); 
     }
 
     void reset() 

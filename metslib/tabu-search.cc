@@ -130,15 +130,6 @@ mets::aspiration_criteria_chain::operator()(feasible_solution& fs,
     return false;
 }
 
-bool 
-mets::termination_criteria_chain::operator()(feasible_solution& fs, 
-					     abstract_search& ts)
-{
-  if(next_m)
-    return next_m->operator()(fs, ts);
-  else
-    return false;
-}
 
 mets::simple_tabu_list::~simple_tabu_list()
 { 
@@ -203,22 +194,5 @@ mets::simple_tabu_list::is_tabu(feasible_solution& sol, move& mov)
     return true;
 
   return tabu_list_chain::is_tabu(sol, mov);
-}
-
-bool 
-mets::noimprove_termination_criteria::operator()(feasible_solution& fs, 
-						 abstract_search& ts)
-{
-  if(fs.cost_function() < best_cost_m)
-    {
-      best_cost_m = fs.cost_function();
-      iterations_left_m = max_noimprove_m;
-    }
-
-  if(iterations_left_m <= 0)
-      return true;
-
-  --iterations_left_m;
-  return termination_criteria_chain::operator()(fs, ts);
 }
 

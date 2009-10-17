@@ -121,3 +121,64 @@ mets::complex_mana_move::operator==(const mets::mana_move& o) const
 
 //________________________________________________________________________
 
+bool 
+mets::termination_criteria_chain::operator()(feasible_solution& fs, 
+					     abstract_search& ts)
+{
+  if(next_m)
+    return next_m->operator()(fs, ts);
+  else
+    return false;
+}
+
+bool 
+mets::termination_criteria_chain::operator()(feasible_solution& fs)
+{
+  if(next_m)
+    return next_m->operator()(fs);
+  else
+    return false;
+}
+
+bool 
+mets::noimprove_termination_criteria::operator()(feasible_solution& fs, 
+						 abstract_search& ts)
+{
+  if(ts.best_cost() < best_cost_m)
+    {
+      best_cost_m = ts.best_cost();
+      second_guess_m = std::max(second_guess_m, 
+				(max_noimprove_m - iterations_left_m));
+      iterations_left_m = max_noimprove_m;
+      resets_m++;
+    }
+
+  total_iterations_m++;
+
+  if(--iterations_left_m <= 0)
+      return true;
+
+  return termination_criteria_chain::operator()(fs, ts);
+}
+
+bool 
+mets::noimprove_termination_criteria::operator()(feasible_solution& fs)
+{
+  gol_type cost = fs.cost_function();
+  if(cost < best_cost_m)
+    {
+      best_cost_m = cost;
+      second_guess_m = std::max(second_guess_m, 
+				(max_noimprove_m - iterations_left_m));
+      iterations_left_m = max_noimprove_m;
+      resets_m++;
+    }
+
+  total_iterations_m++;
+
+  if(--iterations_left_m <= 0)
+      return true;
+
+  return termination_criteria_chain::operator()(fs);
+}
+
