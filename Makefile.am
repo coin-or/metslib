@@ -10,7 +10,7 @@ DIST_SUBDIRS = $(GENERIC_LIBRARY_NAME) test doxydoc
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = metslib.pc
 
-EXTRA_DIST = autogen.sh metslib.sln metslib.vcproj 
+EXTRA_DIST = autogen.sh
 
 ConfigHeader = metslib_config.h
 
