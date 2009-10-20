@@ -8,6 +8,8 @@
 /README -text
 /autogen.sh -text
 /configure.ac -text
+debian/changelog -text
+debian/compat -text
 debian/control -text
 debian/metslib-dev.dirs -text
 debian/metslib-dev.install -text

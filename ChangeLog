@@ -1,3 +1,15 @@
+2009-10-20 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* debian/*: added packaging file for Debian. You can create deb
+	package for your GNU/Debian or derived distro using
+	"dpkg-buildpackage -us -uc -rfakeroot"
+
+2009-10-17 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* metslib/mets.h, metslib/mets.cc: added a new model framework
+	class for permutation problems (mets::permutation_problem) with
+	specific moves (mets::swap_elements) and
+	neighborhoods (mets::swap_neighnorhood,
+	mets::swap_full_neighborhood).
+
 2009-09-07 Mirko Maischberger <mirko.maischberger@gmail.com>
 	* metslib/mets.h: replaced pure virtual operator= from
 	feasible_solution with a (less error prone) copy_from method.

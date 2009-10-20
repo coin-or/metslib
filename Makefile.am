@@ -24,3 +24,5 @@ install-exec-local:
 
 uninstall-local:
 	rm -f $(DESTDIR)$(includedir)/$(GENERIC_LIBRARY_NAME)-$(GENERIC_API_VERSION)/$(GENERIC_LIBRARY_NAME)/$(ConfigHeader)
+
+test: check
