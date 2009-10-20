@@ -394,12 +394,12 @@ namespace mets {
   ///
   /// @see mets::permutation_problem, mets::mana_move
   ///
-  class swap_subsequence : public mets::mana_move 
+  class invert_subsequence : public mets::mana_move 
   {
   public:  
 
     /// @brief A move that swaps from and to.
-    swap_subsequence(int from, int to) 
+    invert_subsequence(int from, int to) 
       : p1(from), p2(to) 
     { }
     
@@ -417,7 +417,7 @@ namespace mets {
     /// tabu list.
     mana_move* 
     clone() const 
-    { return new swap_subsequence(p1, p2); }
+    { return new invert_subsequence(p1, p2); }
     
     /// @brief An hash function used by the tabu list (the hash value is
     /// used to insert the move in an hash set).
@@ -437,8 +437,8 @@ namespace mets {
     int p1; ///< the first element to swap
     int p2; ///< the second element to swap
 
-    template <typename> 
-    friend class swap_neighborhood;
+    // template <typename> 
+    // friend class invert_full_neighborhood;
   };
 
   
@@ -659,6 +659,26 @@ namespace mets {
 
     /// @brief Dtor.
     ~swap_full_neighborhood() { }
+
+    /// @brief Selects a different set of moves at each iteration.
+    void refresh(mets::feasible_solution& s) { }
+
+  };
+
+  /// @brief Generates a the full subsequence inversion neighborhood.
+  class invert_full_neighborhood : public mets::move_manager
+  {
+  public:
+    invert_full_neighborhood(int size) : move_manager()
+    {
+      for(int ii(0); ii!=size; ++ii)
+	for(int jj(0); jj!=size; ++jj)
+	  if(ii != jj)
+	    moves_m.push_back(new invert_subsequence(ii,jj));
+    } 
+
+    /// @brief Dtor.
+    ~invert_full_neighborhood() { }
 
     /// @brief Selects a different set of moves at each iteration.
     void refresh(mets::feasible_solution& s) { }

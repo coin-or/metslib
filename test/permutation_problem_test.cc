@@ -45,53 +45,53 @@ int main()
 	return 1;
       }
   }
-  // test swap_subsequence (1)
+  // test invert_subsequence (1)
   {
     p pi(10);
-    mets::swap_subsequence move(0,9);
+    mets::invert_subsequence move(0,9);
     move.apply(pi);
 
     int check[]={9,8,7,6,5,4,3,2,1,0};
     if(pi.pi_m != std::vector<int>(&check[0], &check[10]))
       {
-	cerr << "Failed swap_subsequence (1)." << endl;
+	cerr << "Failed invert_subsequence (1)." << endl;
 	return 1;
       }
   }
-  // test swap_subsequence (2)
+  // test invert_subsequence (2)
   {
     p pi(9);
-    mets::swap_subsequence move(0,8);
+    mets::invert_subsequence move(0,8);
     move.apply(pi);
 
     int check[]={8,7,6,5,4,3,2,1,0};
 
     if(pi.pi_m != std::vector<int>(&check[0], &check[9]))
       {
-	cerr << "Failed swap_subsequence (2)." << endl;
+	cerr << "Failed invert_subsequence (2)." << endl;
 	return 1;
       }
   }
 
-  // test swap_subsequence (3)
+  // test invert_subsequence (3)
   {
     p pi(9);
-    mets::swap_subsequence move(2,5);
+    mets::invert_subsequence move(2,5);
     move.apply(pi);
 
     int check[]={0,1,5,4,3,2,6,7,8};
 
     if(pi.pi_m != std::vector<int>(&check[0], &check[9]))
       {
-	cerr << "Failed swap_subsequence (3)." << endl;
+	cerr << "Failed invert_subsequence (3)." << endl;
 	return 1;
       }
   }
 
-  // test swap_subsequence (4)
+  // test invert_subsequence (4)
   {
     p pi(9);
-    mets::swap_subsequence move(5,2);
+    mets::invert_subsequence move(5,2);
     move.apply(pi);
 
     int check[]={7,6,5,3,4,2,1,0,8};
@@ -102,7 +102,7 @@ int main()
 
     if(pi.pi_m != std::vector<int>(&check[0], &check[9]))
       {
-	cerr << "Failed swap_subsequence (4)." << endl;
+	cerr << "Failed invert_subsequence (4)." << endl;
 	return 1;
       }
   }

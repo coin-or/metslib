@@ -49,7 +49,7 @@ mets::swap_elements::operator==(const mets::mana_move& o) const
 //________________________________________________________________________
 
 void
-mets::swap_subsequence::apply(mets::feasible_solution& s)
+mets::invert_subsequence::apply(mets::feasible_solution& s)
 { 
   mets::permutation_problem& sol = 
     reinterpret_cast<mets::permutation_problem&>(s);
@@ -62,11 +62,11 @@ mets::swap_subsequence::apply(mets::feasible_solution& s)
 }
 
 bool
-mets::swap_subsequence::operator==(const mets::mana_move& o) const
+mets::invert_subsequence::operator==(const mets::mana_move& o) const
 {
   try {
-    const mets::swap_subsequence& other = 
-      dynamic_cast<const mets::swap_subsequence&>(o);
+    const mets::invert_subsequence& other = 
+      dynamic_cast<const mets::invert_subsequence&>(o);
     return (this->p1 == other.p1 && this->p2 == other.p2);
   } catch (std::bad_cast& e) {
     return false;
