@@ -8,6 +8,12 @@
 /README -text
 /autogen.sh -text
 /configure.ac -text
+debian/control -text
+debian/metslib-dev.dirs -text
+debian/metslib-dev.install -text
+debian/metslib.dirs -text
+debian/metslib.install -text
+debian/rules -text
 doxydoc/Makefile.am -text
 doxydoc/doxygen-footer.html -text
 doxydoc/doxygen.conf -text
