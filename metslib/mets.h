@@ -208,6 +208,10 @@ namespace mets {
   class permutation_problem: public feasible_solution 
   {
   public:
+    
+    /// @brief Unimplemented.
+    permutation_problem(); 
+
     /// @brief Inizialize pi_m = {0, 1, 2, ..., n-1}.
     permutation_problem(int n) : pi_m(n)
     { std::generate(pi_m.begin(), pi_m.end(), sequence(0)); }
@@ -374,6 +378,61 @@ namespace mets {
     bool 
     operator==(const mets::mana_move& o) const;
     
+    void change(int from, int to)
+    { p1 = std::min(from,to); p2 = std::max(from,to); }
+
+  protected:
+    int p1; ///< the first element to swap
+    int p2; ///< the second element to swap
+
+    template <typename> 
+    friend class swap_neighborhood;
+  };
+
+  /// @brief A mets::mana_move that swaps a subsequence of elements in
+  /// a mets::permutation_problem.
+  ///
+  /// @see mets::permutation_problem, mets::mana_move
+  ///
+  class swap_subsequence : public mets::mana_move 
+  {
+  public:  
+
+    /// @brief A move that swaps from and to.
+    swap_subsequence(int from, int to) 
+      : p1(from), p2(to) 
+    { }
+    
+    /// @brief Virtual method that applies the move on a point
+    void
+    apply(mets::feasible_solution& s);
+    
+    /// @brief Unapply the last move: in case of a swap the inverse move
+    /// is just the same swap.
+    void
+    unapply(mets::feasible_solution& s)
+    { this->apply(s); }
+    
+    /// @brief A method to clone self. Needed to insert the move in a
+    /// tabu list.
+    mana_move* 
+    clone() const 
+    { return new swap_subsequence(p1, p2); }
+    
+    /// @brief An hash function used by the tabu list (the hash value is
+    /// used to insert the move in an hash set).
+    size_t
+    hash() const
+    { return (p1)<<16^(p2); }
+    
+    /// @brief Comparison operator used to tell if this move is equal to
+    /// a move in the tabu list.
+    bool 
+    operator==(const mets::mana_move& o) const;
+    
+    void change(int from, int to)
+    { p1 = from; p2 = to; }
+
   protected:
     int p1; ///< the first element to swap
     int p2; ///< the second element to swap

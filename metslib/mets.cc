@@ -47,6 +47,33 @@ mets::swap_elements::operator==(const mets::mana_move& o) const
 }
 
 //________________________________________________________________________
+
+void
+mets::swap_subsequence::apply(mets::feasible_solution& s)
+{ 
+  mets::permutation_problem& sol = 
+    reinterpret_cast<mets::permutation_problem&>(s);
+  int size = sol.size();
+  int top = p1 < p2 ? (p2-p1+1) : (size+p2-p1+1);
+  for(int ii(0); ii!=top/2; ++ii)
+    {
+      sol.swap((p1+ii)%size, (p2-ii)%size); 
+    }
+}
+
+bool
+mets::swap_subsequence::operator==(const mets::mana_move& o) const
+{
+  try {
+    const mets::swap_subsequence& other = 
+      dynamic_cast<const mets::swap_subsequence&>(o);
+    return (this->p1 == other.p1 && this->p2 == other.p2);
+  } catch (std::bad_cast& e) {
+    return false;
+  }
+}
+
+//________________________________________________________________________
 mets::complex_mana_move::complex_mana_move(const mets::complex_mana_move& o) 
   : mana_move(), moves_m(o.moves_m.size())
 {
