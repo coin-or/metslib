@@ -19,6 +19,7 @@ debian/rules -text
 doxydoc/Makefile.am -text
 doxydoc/doxygen-footer.html -text
 doxydoc/doxygen.conf -text
+m4/shave.m4 -text
 /metslib.pc.in -text
 metslib/Makefile.am -text
 metslib/local-search.cc -text
@@ -28,6 +29,8 @@ metslib/metslib_config.h -text
 metslib/observer.h -text
 metslib/simulated-annealing.cc -text
 metslib/tabu-search.cc -text
+/shave-libtool.in -text
+/shave.in -text
 test/Makefile.am -text
 test/permutation_problem_test.cc -text
 test/tabu_list_test.cc -text
