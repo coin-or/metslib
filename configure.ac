@@ -3,7 +3,7 @@ dnl Initialization macros.
 dnl --------------------------------
 
 AC_INIT([metslib], [0.4.4], [mirko.maischberger@gmail.com])
-AM_CONFIG_HEADER([metslib/config.h])
+AC_CONFIG_HEADERS([metslib/config.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([config])
 
@@ -133,6 +133,8 @@ dnl -----------------------------------------------
 dnl Generates Makefile's, configuration files and scripts
 dnl -----------------------------------------------
 
+SHAVE_INIT
+AC_CONFIG_FILES([shave shave-libtool])
 AC_OUTPUT(Makefile \
           metslib.pc \
           metslib/Makefile \

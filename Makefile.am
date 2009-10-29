@@ -26,3 +26,16 @@ uninstall-local:
 	rm -f $(DESTDIR)$(includedir)/$(GENERIC_LIBRARY_NAME)-$(GENERIC_API_VERSION)/$(GENERIC_LIBRARY_NAME)/$(ConfigHeader)
 
 test: check
+
+doxydoc:
+	cd $(srcdir); doxygen doxydoc/doxygen.conf
+
+targets:
+	echo "METSlib makefile main targets"
+	echo "  all       compile project"
+	echo "  clean     remove objects and library files"
+	echo "  dist      create tar.gz"
+	echo "  test      compile and run test cases"
+	echo "  doxydoc   run doxygen on project"
+
+.PHONY: test doxydoc

@@ -15,6 +15,7 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <cassert>
 #include "mets.h"
 
 //________________________________________________________________________
@@ -57,7 +58,11 @@ mets::invert_subsequence::apply(mets::feasible_solution& s)
   int top = p1 < p2 ? (p2-p1+1) : (size+p2-p1+1);
   for(int ii(0); ii!=top/2; ++ii)
     {
-      sol.swap((p1+ii)%size, (p2-ii)%size); 
+      int from = (p1+ii)%size;
+      int to = (size+p2-ii)%size;
+      assert(from >= 0 && from < size);
+      assert(to >= 0 && to < size);
+      sol.swap(from, to); 
     }
 }
 
