@@ -94,7 +94,7 @@ namespace mets {
       notify();
     protected:
       subject();
-      set<observer<observed_subject>*> observers_m;
+      set<observer<observed_subject>*> observers_m; //<@brief Observers of this subject
     };
 
   ///
@@ -116,10 +116,10 @@ namespace mets {
       /// @brief This method is automatically called when this
       ///        observer is attached to a "notified" subject.
       ///
-      /// @param subject: The subject that was notified and that
-      ///                 called our update method.
+      /// @param subject The subject that was notified and that
+      ///                called our update method.
       virtual void
-      update(observed_subject*) = 0;
+      update(observed_subject* subject) = 0;
     protected:
       observer() {};
     };

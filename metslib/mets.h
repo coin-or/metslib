@@ -126,8 +126,12 @@ namespace mets {
     : public std::runtime_error
   {
   public:
+    /// @brief Default ctor.
     no_moves_error() 
       : std::runtime_error("There are no more available moves.") {}
+    /// @brief A ctor with a custom message
+    ///
+    /// @param message a custom message for the user
     no_moves_error(const std::string message) 
       : std::runtime_error(message) {}
   };
@@ -148,7 +152,7 @@ namespace mets {
     int operator()() 
     { return value_m++; }
   protected:
-    int value_m;
+    int value_m; ///< @brief Incremented when operator() is called
   };
 
   /// @defgroup model Model
@@ -184,6 +188,11 @@ namespace mets {
     virtual void
     copy_from(const feasible_solution& other) = 0;
 
+    /// @brief Assignment operator used by search methods to record
+    /// the best solution found.
+    ///
+    /// This method is not virtual. And should not be used or
+    /// overridden by the user.
     feasible_solution& 
     operator=(const feasible_solution& other) 
     { this->copy_from(other); return *this; }
@@ -236,8 +245,10 @@ namespace mets {
     { std::swap(pi_m[i], pi_m[j]); }
     
   protected:
-    std::vector<int> pi_m;
+    std::vector<int> pi_m; ///< @brief The permutation variable
 
+    /// @brief Friend method to shuffle the permutation. Remember that
+    /// you must update your cost function after shuffling.
     template<typename random_generator> 
     friend void random_shuffle(permutation_problem& p, random_generator& rng);
   };
@@ -378,6 +389,7 @@ namespace mets {
     bool 
     operator==(const mets::mana_move& o) const;
     
+    /// @brief Modify this move.
     void change(int from, int to)
     { p1 = std::min(from,to); p2 = std::max(from,to); }
 
@@ -430,6 +442,7 @@ namespace mets {
     bool 
     operator==(const mets::mana_move& o) const;
     
+    /// @brief Modify this move.
     void change(int from, int to)
     { p1 = from; p2 = to; }
 
@@ -452,7 +465,11 @@ namespace mets {
   class complex_mana_move : public mets::mana_move
   {
   protected:
+    /// @brief Array type that holds the moves contained in this
+    /// composed move.
     typedef std::vector<mets::mana_move*> move_list_t;
+    /// @brief An array that holds the moves composed in this complex
+    /// move.
     move_list_t moves_m;
 
   public:
@@ -625,11 +642,16 @@ namespace mets {
     void refresh(mets::feasible_solution& s);
     
   protected:
+    /// @brief The random number generator to be used
     random_generator& rng;
+    /// @brief An uniform int generator
     std::tr1::uniform_int<> int_range;
+    /// @brief The number of simple swaps
     unsigned int n;
+    /// @brief The number of double swaps
     unsigned int nc;
 
+    /// @brief Randomly perturbates a move (used internally on refresh)
     void randomize_move(swap_elements& m, unsigned int size);
   };
 
@@ -639,16 +661,10 @@ namespace mets {
   public:
     /// @brief A neighborhood exploration strategy for mets::swap_elements.
     ///
-    /// This strategy selects *moves* random swaps and *complex_moves*
-    /// random double swaps.
+    /// This strategy selects all the available swap moves given the
+    /// problem size.
     ///
-    /// @param r a random number generator (e.g. an instance of
-    /// std::tr1::minstd_rand0 or std::tr1::mt19936)
-    ///
-    /// @param moves the number of swaps to add to the exploration
-    ///
-    /// @param complex_moves the number of random double swaps to add
-    /// to the exploration
+    /// @param size the size of the problem.
     ///
     swap_full_neighborhood(int size) : move_manager()
     {
@@ -660,7 +676,7 @@ namespace mets {
     /// @brief Dtor.
     ~swap_full_neighborhood() { }
 
-    /// @brief Selects a different set of moves at each iteration.
+    /// @brief Does nothing. This neighborhood is static.
     void refresh(mets::feasible_solution& s) { }
 
   };
@@ -669,6 +685,10 @@ namespace mets {
   class invert_full_neighborhood : public mets::move_manager
   {
   public:
+    /// @brief Insert all possible subsequence inversion for a problem
+    /// of the given size
+    ///
+    /// @param size the problem dimension
     invert_full_neighborhood(int size) : move_manager()
     {
       for(int ii(0); ii!=size; ++ii)
@@ -680,7 +700,7 @@ namespace mets {
     /// @brief Dtor.
     ~invert_full_neighborhood() { }
 
-    /// @brief Selects a different set of moves at each iteration.
+    /// @brief Does nothing. This neighborhood is static.
     void refresh(mets::feasible_solution& s) { }
 
   };
@@ -695,10 +715,12 @@ namespace mets {
     {return mov->hash();}
   };
   
-  /// @brief Functor class to permit hash_set of moves (used by tabu list)
+  /// @brief Functor class to permit hash sets of moves (used by tabu
+  /// list)
   template<typename Tp>
   struct dereferenced_equal_to 
   {
+    /// @brief Used internally to hallow the use of hash sets.
     bool operator()(const Tp l, 
 		    const Tp r) const 
     { return *l == *r; }
@@ -726,6 +748,8 @@ namespace mets {
     { }
     /// purposely not implemented (see Effective C++)
     termination_criteria_chain(const termination_criteria_chain& other);
+
+    /// purposely not implemented (see Effective C++)
     termination_criteria_chain& 
     operator=(const termination_criteria_chain& other);
 
@@ -741,7 +765,7 @@ namespace mets {
     /// @param as The search instance.
     /// @return True if we shoud terminate
     virtual bool 
-    operator()(feasible_solution& fs, abstract_search& ts);
+    operator()(feasible_solution& fs, abstract_search& as);
 
     /// @brief Alternate function that decides if we shoud terminate the
     /// search process
@@ -751,6 +775,7 @@ namespace mets {
     virtual bool 
     operator()(feasible_solution& fs);
 
+    /// @brief Rewinds the termination criterion.
     virtual void reset() = 0;
 
   protected:
@@ -770,6 +795,7 @@ namespace mets {
 
     /// purposely not implemented (see Effective C++)
     search_listener(const search_listener& other);
+    /// purposely not implemented (see Effective C++)
     search_listener& 
     operator=(const search_listener& other);
 
@@ -858,6 +884,7 @@ namespace mets {
     working() const 
     { return working_solution_m; }
 
+    /// @brief The current working solution.
     virtual feasible_solution&
     working() 
     { return working_solution_m; }
@@ -898,11 +925,11 @@ namespace mets {
     { return best_solution_m.cost_function(); };
 
   protected:
-    feasible_solution& best_solution_m;
-    feasible_solution& working_solution_m;
-    move_manager& moves_m;
-    move_manager::iterator current_move_m;
-    int step_m;
+    feasible_solution& best_solution_m; ///< @brief The best solution so far
+    feasible_solution& working_solution_m;  ///< @brief The work solution so far
+    move_manager& moves_m;  ///< @brief The neighborhood exploration strategy
+    move_manager::iterator current_move_m;  ///< @brief The current move
+    int step_m;  ///< @brief The phase of the algorithm
   };
 
   /// @defgroup local_search Local Search
@@ -919,14 +946,16 @@ namespace mets {
   public:
     /// @brief Creates a local search instance
     ///
-    /// @param working The working solution (this will be modified
-    /// during search) 
+    /// @param starting_point The working solution (this will be
+    /// modified during search). At the end of the search this will
+    /// reflect the point at wich the algorithm was stopped.
     ///
-    /// @param best_so_far A different solution
-    /// instance used to store the best solution found
+    /// @param best_so_far A different solution instance used to store
+    /// the best solution found. At exit will contain the best
+    /// solution found.
     ///
     /// @param moveman A problem specific implementation of the
-    /// mets::move_manager used to generate the neighborhood.
+    /// mets::move_manager used to explore the neighborhood.
     ///
     /// @param short_circuit Wether the search should stop on
     /// the first improving move or not.
@@ -937,6 +966,7 @@ namespace mets {
 
     /// purposely not implemented (see Effective C++)
     local_search(const local_search&);
+    /// purposely not implemented (see Effective C++)
     local_search& operator=(const local_search&);
     
     /// @brief This method starts the local search process.
@@ -994,8 +1024,8 @@ namespace mets {
   public:
     /// @brief Creates a search by simulated annealing instance.
     ///
-    /// @param working The working solution (this will be modified
-    /// during search).
+    /// @param starting_point The working solution (this will be
+    /// modified during search).
     ///
     /// @param best_so_far A different solution
     /// instance used to store the best solution found.
@@ -1011,6 +1041,8 @@ namespace mets {
     /// @param cs The annealing schedule that decorates this SA instance.
     ///
     /// @param starting_temp The starting SA temperature.
+    ///
+    /// @param K The Boltzmann's constant to use.
     simulated_annealing(feasible_solution& starting_point,
 			feasible_solution& best_so_far,
 			move_manager& moveman,
@@ -1021,6 +1053,7 @@ namespace mets {
     
     /// purposely not implemented (see Effective C++)
     simulated_annealing(const simulated_annealing&);
+    /// purposely not implemented (see Effective C++)
     simulated_annealing& operator=(const simulated_annealing&);
     
     /// @brief This method starts the simulated annealing search
@@ -1047,20 +1080,20 @@ namespace mets {
     { return cooling_schedule_m; }
 
   protected:
-    termination_criteria_chain& termination_criteria_m;
-    abstract_cooling_schedule& cooling_schedule_m;
-    double starting_temp_m;
-    double current_temp_m;
-    double K_m;
+    termination_criteria_chain& termination_criteria_m; ///< @brief A criterion
+    abstract_cooling_schedule& cooling_schedule_m;///< @brief A cooling schedule
+    double starting_temp_m; ///< @brief The starting temperature 
+    double current_temp_m; ///< @brief The current temp of the algorithm
+    double K_m; ///< @brief A value for the Boltzmann's constant
 #if defined (HAVE_UNORDERED_MAP) && !defined (TR1_MIXED_NAMESPACE)
-    std::uniform_real<> ureal;
-    std::mt19937 rng;
-    std::variate_generator< std::mt19937, std::uniform_real<> > gen;
+    std::uniform_real<> ureal; ///<@brief random generator
+    std::mt19937 rng; ///<@brief random generator
+    std::variate_generator< std::mt19937, std::uniform_real<> > gen; //<@brief random generator
 #else
-    std::tr1::uniform_real<> ureal;
-    std::tr1::mt19937 rng;
+    std::tr1::uniform_real<> ureal; ///<@brief random generator
+    std::tr1::mt19937 rng; ///<@brief random generator
     std::tr1::variate_generator< std::tr1::mt19937,
-				 std::tr1::uniform_real<double> > gen;
+				 std::tr1::uniform_real<double> > gen; ///<@brief random generator
 #endif
   };
     
@@ -1122,6 +1155,7 @@ namespace mets {
 
     /// purposely not implemented (see Effective C++)
     aspiration_criteria_chain(const aspiration_criteria_chain& other);
+    /// purposely not implemented (see Effective C++)
     aspiration_criteria_chain& 
     operator=(const aspiration_criteria_chain& other);
 
@@ -1572,11 +1606,12 @@ namespace mets {
       return termination_criteria_chain::operator()(fs); 
     }
 
+    /// @brief Does nothing, threshold is stateless.
     void reset() 
     { /* stateless */ };
 
   protected:
-    gol_type level_m;
+    gol_type level_m; ///<@brief The threshold level
   };
 
   /// @}
