@@ -79,7 +79,8 @@ mets::invert_subsequence::operator==(const mets::mana_move& o) const
 }
 
 //________________________________________________________________________
-mets::complex_mana_move::complex_mana_move(const mets::complex_mana_move& o) 
+template<typename move_type>
+mets::composite_move<move_type>::composite_move(const mets::composite_move<move_type>& o)
   : mana_move(), moves_m(o.moves_m.size())
 {
   for(unsigned int ii = 0; ii != moves_m.size(); ++ii)
@@ -89,40 +90,44 @@ mets::complex_mana_move::complex_mana_move(const mets::complex_mana_move& o)
     }
 }
 
-mets::complex_mana_move::~complex_mana_move()
+template<typename move_type>
+mets::composite_move<move_type>::~composite_move()
 {
-  for(move_list_t::iterator ii = moves_m.begin();
+  for(typename move_list_t::iterator ii = moves_m.begin();
       ii != moves_m.end(); ++ii)
     {
       if(*ii) delete *ii;
     }
 }
 
+template<typename move_type>
 void
-mets::complex_mana_move::apply(mets::feasible_solution& s)
+mets::composite_move<move_type>::apply(mets::feasible_solution& s)
 {
-  for(move_list_t::iterator ii = moves_m.begin();
+  for(typename move_list_t::iterator ii = moves_m.begin();
       ii != moves_m.end(); ++ii)
     {
       (*ii)->apply(s);
     }
 }
 
+template<typename move_type>
 void
-mets::complex_mana_move::unapply(mets::feasible_solution& s)
+mets::composite_move<move_type>::unapply(mets::feasible_solution& s)
 {
-  for(move_list_t::reverse_iterator ii = moves_m.rbegin();
+  for(typename move_list_t::reverse_iterator ii = moves_m.rbegin();
       ii != moves_m.rend(); ++ii)
     {
       (*ii)->unapply(s);
     }
 }
 
+template<typename move_type>
 size_t
-mets::complex_mana_move::hash() const
+mets::composite_move<move_type>::hash() const
 {
   size_t v = 0;
-  for(move_list_t::const_iterator ii = moves_m.begin();
+  for(typename move_list_t::const_iterator ii = moves_m.begin();
       ii != moves_m.end(); ++ii)
     {
       v ^= (*ii)->hash();
@@ -130,12 +135,13 @@ mets::complex_mana_move::hash() const
   return v; 
 }
 
+template<typename move_type>
 bool
-mets::complex_mana_move::operator==(const mets::mana_move& o) const
+mets::composite_move<move_type>::operator==(const mets::mana_move& o) const
 {
   try {
-    const complex_mana_move& other = 
-      dynamic_cast<const complex_mana_move&>(o);
+    const composite_move<move_type>& other = 
+      dynamic_cast<const composite_move<move_type>&>(o);
     // different length?
     if(moves_m.size() != other.moves_m.size()) 
       return false;

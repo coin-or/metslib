@@ -309,14 +309,21 @@ namespace mets {
     virtual void
     apply(feasible_solution& sol) = 0;
 
+    /// @brief Method usefull for tracing purposes.
+    virtual void print(ostream& os) const { };
+  };
+
+  class undoable_move : public virtual move
+  {
+  public:
+    virtual 
+    ~undoable_move() 
+    { }; 
     ///
     /// @brief Unapply the (last made) move.
     ///
     virtual void
     unapply(feasible_solution& sol) = 0;
-
-    /// @brief Method usefull for tracing purposes.
-    virtual void print(ostream& os) const { };
   };
 
   /// @brief A Mana Move is a move that can be automatically made tabu
@@ -325,7 +332,7 @@ namespace mets {
   /// If you implement this class you can use the
   /// mets::simple_tabu_list as a ready to use tabu list, but you must
   /// implement copy, operator== and provide an hash funciton.
-  class mana_move : public move
+  class mana_move : public virtual move
   {
   public:
     /// @brief Make a copy of this move.
@@ -342,6 +349,16 @@ namespace mets {
   };
 
 
+  /// @brief A Mana Move is a move that can be automatically made tabu
+  /// by the mets::simple_tabu_list.
+  ///
+  /// If you implement this class you can use the
+  /// mets::simple_tabu_list as a ready to use tabu list, but you must
+  /// implement copy, operator== and provide an hash funciton.
+  class undoable_mana_move : public mana_move, undoable_move
+  { };
+
+
   template<typename rngden> class swap_neighborhood; // fw decl
 
   /// @brief A mets::mana_move that swaps two elements in a
@@ -351,7 +368,7 @@ namespace mets {
   ///
   /// @see mets::permutation_problem, mets::mana_move
   ///
-  class swap_elements : public mets::mana_move 
+  class swap_elements : public mets::undoable_mana_move 
   {
   public:  
 
@@ -401,12 +418,12 @@ namespace mets {
     friend class swap_neighborhood;
   };
 
-  /// @brief A mets::mana_move that swaps a subsequence of elements in
+  /// @brief A mets::undoable_mana_move that swaps a subsequence of elements in
   /// a mets::permutation_problem.
   ///
-  /// @see mets::permutation_problem, mets::mana_move
+  /// @see mets::permutation_problem, mets::undoable_mana_move
   ///
-  class invert_subsequence : public mets::mana_move 
+  class invert_subsequence : public mets::undoable_mana_move 
   {
   public:  
 
@@ -462,12 +479,13 @@ namespace mets {
   ///
   /// Tip: construct the defaut instance, than add the moves you wish
   /// with the add method.
-  class complex_mana_move : public mets::mana_move
+  template <typename move_type>
+  class composite_move : public move_type
   {
   protected:
     /// @brief Array type that holds the moves contained in this
     /// composed move.
-    typedef std::vector<mets::mana_move*> move_list_t;
+    typedef typename std::vector<move_type*> move_list_t;
     /// @brief An array that holds the moves composed in this complex
     /// move.
     move_list_t moves_m;
@@ -477,19 +495,19 @@ namespace mets {
     ///
     /// @param n Number of preallocated moves
     explicit
-    complex_mana_move(int n = 0) 
-      : mana_move(), moves_m(n)
-    {  for(move_list_t::iterator it(moves_m.begin()); it!=moves_m.end(); ++it)
+    composite_move(int n = 0)
+      : move_type(), moves_m(n)
+    {  for(typename move_list_t::iterator it(moves_m.begin()); it!=moves_m.end(); ++it)
 	*it = 0; }
 
     /// @brief Copy ctor, clones all the included moves.
     ///
     /// NB: before copying a complex_mana_move be sure to have
     /// assigned valid moves to each slot.
-    complex_mana_move(const complex_mana_move& o);
+    composite_move(const composite_move<move_type>& o);
     
     /// @brief Dtor.
-    ~complex_mana_move();
+    ~composite_move();
     
     /// @brief Append a new move to the list.
     ///
@@ -498,11 +516,11 @@ namespace mets {
     ///
     /// @param m A pointer to the mets::mana_move to be added
     void
-    push_back(mana_move* m)
+    push_back(move_type* m)
     { moves_m.push_back(m->clone()); }
 
     /// @brief Returns the number of attached moves
-	size_t
+    size_t
     size() const 
     { return moves_m.size(); }
 
@@ -511,12 +529,12 @@ namespace mets {
     /// The pointer is returned by reference so that one
     /// can assign a new instance to it. Be sure to delete
     /// the previous pointer, if it's not null.
-    mana_move*&
+    move_type*&
     operator[](unsigned int ii)
     { return moves_m[ii]; }
 
     /// @brief Returns a const pointer to the ii-th move.
-    const mana_move*
+    const move_type*
     operator[](unsigned int ii) const
     { return moves_m[ii]; }
 
@@ -541,9 +559,9 @@ namespace mets {
     unapply(mets::feasible_solution& s);
     
     /// @brief Clone this complex move (cloning all the included moves)
-    mana_move* 
+    move_type* 
     clone() const 
-    { return new complex_mana_move(*this); }
+    { return new composite_move<move_type>(*this); }
     
     /// @brief Create an hash number xoring the hashes of the included moves
     size_t
@@ -552,7 +570,6 @@ namespace mets {
     /// @brief Compare two mets::complex_mana_moves for equality
     bool operator==(const mana_move& o) const;
   };
-  
   
   /// @brief Neighborhood generator.
   ///
@@ -565,40 +582,71 @@ namespace mets {
   /// To make a variable neighborhood (or to selectively select
   /// feasible moves at each iteration) update the moves_m queue in
   /// the refresh() method.
-  class move_manager
+
+  class neighborhood_explorer
+  {
+  public:
+    class iterator
+    {
+    public:
+      virtual ~iterator() {}
+      virtual iterator& operator++() = 0;
+      virtual move* operator*() = 0;
+      virtual const move* operator*() const = 0;
+    };
+    virtual ~neighborhood_explorer() {}
+    virtual iterator& begin() = 0;
+    virtual iterator& end() = 0;
+    virtual size_t size() = 0;
+    /// @brief Called by the various search algorithms before each
+    /// iteration to update the neighborhood.
+    virtual void refresh(feasible_solution&) = 0;
+  };
+
+  template<typename delegee_iterator>
+  class neighborhood_iterator_wrapper : public neighborhood_explorer::iterator
+  {
+  public:
+    neighborhood_iterator_wrapper(delegee_iterator& dit) : dit_m(dit) {}
+    neighborhood_explorer::iterator& operator++() { ++dit_m; return *this; }
+    move* operator*() { return *dit_m; }
+    const move* operator*() const { return *dit_m; }
+  protected:
+    delegee_iterator& dit_m;
+  };
+
+  template<typename move_type>
+  class simple_neighborhood_explorer : public neighborhood_explorer
   {
   public:
     ///
     /// @brief Initialize the move manager with an empty list of moves
-    move_manager() 
+    simple_neighborhood_explorer() 
       : moves_m() 
     { }
 
     /// @brief Virtual destructor
     virtual 
-    ~move_manager() 
+    ~simple_neighborhood_explorer() 
     { }
 
+    typedef typename std::deque<move_type*>::iterator delegee_iterator;
+
     /// @brief Iterator type to iterate over moves of the neighborhood
-    typedef std::deque<move*>::iterator iterator;
+    typedef neighborhood_explorer::iterator iterator;
 
     /// @brief Size type
-    typedef std::deque<move*>::size_type size_type;
-
-    /// @brief Called by the various search algorithms before each
-    /// iteration to update the neighborhood.
-    virtual void
-    refresh(feasible_solution& sol) = 0;
+    typedef size_t size_type;
 
     /// @brief Begin iterator of available moves queue.
-    virtual iterator 
-    begin() 
-    { return moves_m.begin(); }
+    virtual iterator& 
+    begin()
+    { return neighborhood_iterator_wrapper<delegee_iterator>(moves_m.begin()); }
 
     /// @brief End iterator of available moves queue.
-    virtual iterator 
+    virtual iterator&
     end() 
-    { return moves_m.end(); }
+    { return neighborhood_iterator_wrapper<delegee_iterator>(moves_m.end()); }
 
     /// @brief Size of the neighborhood.
     virtual size_type 
@@ -606,16 +654,16 @@ namespace mets {
     { return moves_m.size(); }
 
   protected:
-    std::deque<move*> moves_m; ///< The moves queue
+    std::deque<move_type*> moves_m; ///< The moves queue
 
   private:
-    move_manager(const move_manager&);
+    simple_neighborhood_explorer(const simple_neighborhood_explorer&);
   };
   
 
   /// @brief Generates a stochastic subset of the neighborhood.
   template<typename random_generator = std::tr1::minstd_rand0>
-  class swap_neighborhood : public mets::move_manager
+  class swap_neighborhood : public mets::simple_neighborhood_explorer<undoable_mana_move>
   {
   public:
     /// @brief A neighborhood exploration strategy for mets::swap_elements.
@@ -633,7 +681,7 @@ namespace mets {
     ///
     swap_neighborhood(random_generator& r, 
 		      unsigned int moves, 
-		      unsigned int complex_moves);
+		      unsigned int double_moves);
 
     /// @brief Dtor.
     ~swap_neighborhood();
@@ -656,7 +704,7 @@ namespace mets {
   };
 
   /// @brief Generates a the full swap neighborhood.
-  class swap_full_neighborhood : public mets::move_manager
+  class swap_full_neighborhood : public mets::simple_neighborhood_explorer<undoable_mana_move>
   {
   public:
     /// @brief A neighborhood exploration strategy for mets::swap_elements.
@@ -666,7 +714,7 @@ namespace mets {
     ///
     /// @param size the size of the problem.
     ///
-    swap_full_neighborhood(int size) : move_manager()
+    swap_full_neighborhood(int size) : simple_neighborhood_explorer<undoable_mana_move>()
     {
       for(int ii(0); ii!=size-1; ++ii)
 	for(int jj(ii+1); jj!=size; ++jj)
@@ -682,14 +730,14 @@ namespace mets {
   };
 
   /// @brief Generates a the full subsequence inversion neighborhood.
-  class invert_full_neighborhood : public mets::move_manager
+  class invert_full_neighborhood : public mets::simple_neighborhood_explorer<undoable_mana_move>
   {
   public:
     /// @brief Insert all possible subsequence inversion for a problem
     /// of the given size
     ///
     /// @param size the problem dimension
-    invert_full_neighborhood(int size) : move_manager()
+    invert_full_neighborhood(int size) : simple_neighborhood_explorer<undoable_mana_move>()
     {
       for(int ii(0); ii!=size; ++ii)
 	for(int jj(0); jj!=size; ++jj)
@@ -831,11 +879,11 @@ namespace mets {
     /// instance used to store the best solution found
     ///
     /// @param moveman A problem specific implementation of the
-    /// mets::move_manager used to generate the neighborhood.
+    /// mets::simple_neighborhood_explorer used to generate the neighborhood.
     ///
     abstract_search(feasible_solution& working,
 		    feasible_solution& best_so_far,
-		    move_manager& moveman)
+		    neighborhood_explorer& moveman)
       : subject<abstract_search>(), 
 	best_solution_m(best_so_far),
 	working_solution_m(working),
@@ -892,21 +940,21 @@ namespace mets {
     /// @brief The last move made
     virtual const move&
     current_move() const 
-    { return **current_move_m; }
+    { return ***current_move_m; }
 
     /// @brief The last move made
     virtual move&
     current_move() 
-    { return **current_move_m; }
+    { return ***current_move_m; }
  
     /// @brief The move manager used by this tabu search
-    const move_manager& 
-    get_move_manager() const 
+    const neighborhood_explorer& 
+    get_neighborhood_explorer() const 
     { return moves_m; }
 
     /// @brief The move manager used by this tabu search
-    move_manager& 
-    get_move_manager() 
+    neighborhood_explorer& 
+    get_neighborhood_explorer() 
     { return moves_m; }
 
     /// @brief The current step of the algorithm
@@ -927,8 +975,8 @@ namespace mets {
   protected:
     feasible_solution& best_solution_m; ///< @brief The best solution so far
     feasible_solution& working_solution_m;  ///< @brief The work solution so far
-    move_manager& moves_m;  ///< @brief The neighborhood exploration strategy
-    move_manager::iterator current_move_m;  ///< @brief The current move
+    neighborhood_explorer& moves_m;  ///< @brief The neighborhood exploration strategy
+    neighborhood_explorer::iterator* current_move_m;  ///< @brief The current move
     int step_m;  ///< @brief The phase of the algorithm
   };
 
@@ -955,13 +1003,13 @@ namespace mets {
     /// solution found.
     ///
     /// @param moveman A problem specific implementation of the
-    /// mets::move_manager used to explore the neighborhood.
+    /// mets::neighborhood_explorer used to explore the neighborhood.
     ///
     /// @param short_circuit Wether the search should stop on
     /// the first improving move or not.
     local_search(feasible_solution& starting_point,
 		 feasible_solution& best_so_far,
-		 move_manager& moveman,
+		 neighborhood_explorer& moveman,
 		 bool short_circuit = false);
 
     /// purposely not implemented (see Effective C++)
@@ -972,7 +1020,7 @@ namespace mets {
     /// @brief This method starts the local search process.
     ///
     /// To have a real local search you should provide an 
-    /// mets::move_manager than enumerates all feasible
+    /// mets::neighborhood_explorer than enumerates all feasible
     /// moves.
     ///
     virtual void
@@ -1031,7 +1079,7 @@ namespace mets {
     /// instance used to store the best solution found.
     ///
     /// @param moveman A problem specific implementation of the
-    /// mets::move_manager used to generate the neighborhood.
+    /// mets::neighborhood_explorer used to generate the neighborhood.
     ///
     /// @param tc The termination criteria used to terminate the
     /// search process, this is an extension to the standard Simulated
@@ -1045,7 +1093,7 @@ namespace mets {
     /// @param K The Boltzmann's constant to use.
     simulated_annealing(feasible_solution& starting_point,
 			feasible_solution& best_so_far,
-			move_manager& moveman,
+			neighborhood_explorer& moveman,
 			termination_criteria_chain& tc,
 			abstract_cooling_schedule& cs,
 			double starting_temp,
@@ -1273,8 +1321,8 @@ namespace mets {
     /// @param best_so_far A different solution
     /// instance used to store the best solution found.
     ///
-    /// @param move_manager_inst A problem specific implementation of the
-    /// mets::move_manager used to generate the neighborhood.
+    /// @param neighborhood_explorer_inst A problem specific implementation of the
+    /// mets::neighborhood_explorer used to generate the neighborhood.
     ///
     /// @param tabus The tabu list used to decorate this search
     /// instance.
@@ -1289,7 +1337,7 @@ namespace mets {
     ///
     tabu_search(feasible_solution& starting_solution, 
 		feasible_solution& best_sol, 
-		move_manager& move_manager_inst,
+		neighborhood_explorer& neighborhood_explorer_inst,
 		tabu_list_chain& tabus,
 		aspiration_criteria_chain& aspiration,
 		termination_criteria_chain& termination);
@@ -1626,7 +1674,7 @@ template<typename random_generator>
 mets::swap_neighborhood<random_generator>::swap_neighborhood(random_generator& r, 
 							     unsigned int moves, 
 							     unsigned int complex_moves)
-  : mets::move_manager(), rng(r), int_range(0), n(moves), nc(complex_moves)
+  : mets::simple_neighborhood_explorer<undoable_mana_move>(), rng(r), int_range(0), n(moves), nc(complex_moves)
 { 
   // n simple moves
   for(unsigned int ii = 0; ii != n; ++ii) 
@@ -1635,7 +1683,7 @@ mets::swap_neighborhood<random_generator>::swap_neighborhood(random_generator& r
   // nc double moves
   for(unsigned int ii = 0; ii != nc; ++ii) 
     {
-      mets::complex_mana_move& cm = *new mets::complex_mana_move(2);
+      mets::composite_move<undoable_mana_move>& cm = *new mets::composite_move<undoable_mana_move>(2);
       cm[0] = new swap_elements(0,0);
       cm[1] = new swap_elements(0,0);
       moves_m.push_back(&cm);
@@ -1668,8 +1716,8 @@ mets::swap_neighborhood<random_generator>::refresh(mets::feasible_solution& s)
   // the following nc are complex_mana_moves made of 2 qap_moveS
   for(unsigned int cnt = 0; cnt != nc; ++cnt)
     {
-      mets::complex_mana_move& cm = 
-	static_cast<mets::complex_mana_move&>(**ii);
+      mets::composite_move<undoable_mana_move>& cm = 
+	static_cast<mets::composite_move<undoable_mana_move>&>(**ii);
       for(int jj = 0; jj != 2; ++jj)
 	{
 	  swap_elements* m = static_cast<swap_elements*>(cm[jj]);

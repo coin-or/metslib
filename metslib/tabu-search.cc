@@ -58,6 +58,7 @@ mets::tabu_search::search()
 	    aspiration_criteria_met = 
 	      aspiration_criteria_m(working_solution_m, *this);
 	  
+	  
 	  // unapply move
 	  (*movit)->unapply(working_solution_m);
 	  
