@@ -3,6 +3,10 @@
 	package for your GNU/Debian or derived distro using
 	"dpkg-buildpackage -us -uc -rfakeroot"
 
+2009-10-19 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* test/permutation_problem_test.cc: a test case for the 
+        permutation problem.
+
 2009-10-17 Mirko Maischberger <mirko.maischberger@gmail.com>
 	* metslib/mets.h, metslib/mets.cc: added a new model framework
 	class for permutation problems (mets::permutation_problem) with

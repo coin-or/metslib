@@ -114,7 +114,7 @@ mets::complex_mana_move::unapply(mets::feasible_solution& s)
   for(move_list_t::reverse_iterator ii = moves_m.rbegin();
       ii != moves_m.rend(); ++ii)
     {
-      (*ii)->apply(s);
+      (*ii)->unapply(s);
     }
 }
 
