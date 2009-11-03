@@ -776,7 +776,7 @@ namespace mets {
     operator()(feasible_solution& fs);
 
     /// @brief Rewinds the termination criterion.
-    virtual void reset() = 0;
+    virtual void reset();
 
   protected:
     termination_criteria_chain* next_m;
@@ -1512,7 +1512,8 @@ namespace mets {
       --iterations_m;
       return termination_criteria_chain::operator()(fs); 
     }
-    void reset() { iterations_m = max_m; }
+    void reset() 
+    { iterations_m = max_m; termination_criteria_chain::reset(); }
   protected:
     int max_m;
     int iterations_m;
@@ -1556,7 +1557,7 @@ namespace mets {
     { iterations_left_m = max_noimprove_m; 
       second_guess_m = total_iterations_m = resets_m = 0; 
       best_cost_m = std::numeric_limits<gol_type>::max();
-    }
+      termination_criteria_chain::reset(); }
     int second_guess() { return second_guess_m; }
     int iteration() { return total_iterations_m; }
     int resets() { return resets_m; }
@@ -1608,7 +1609,7 @@ namespace mets {
 
     /// @brief Does nothing, threshold is stateless.
     void reset() 
-    { /* stateless */ };
+    {  termination_criteria_chain::reset(); }
 
   protected:
     gol_type level_m; ///<@brief The threshold level

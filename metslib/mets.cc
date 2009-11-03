@@ -172,6 +172,13 @@ mets::termination_criteria_chain::operator()(feasible_solution& fs)
     return false;
 }
 
+void
+mets::termination_criteria_chain::reset()
+{
+  if(next_m)
+    next_m->reset();
+}
+
 bool 
 mets::noimprove_termination_criteria::operator()(feasible_solution& fs, 
 						 abstract_search& ts)
