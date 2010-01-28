@@ -658,7 +658,11 @@ namespace mets {
     } 
 
     /// @brief Dtor.
-    ~swap_full_neighborhood() { }
+    ~swap_full_neighborhood() { 
+      for(std::deque<move*>::iterator it = moves_m.begin(); 
+	  it != moves_m.end(); ++it)
+	delete *it;
+    }
 
     /// @brief Selects a different set of moves at each iteration.
     void refresh(mets::feasible_solution& s) { }
@@ -678,7 +682,11 @@ namespace mets {
     } 
 
     /// @brief Dtor.
-    ~invert_full_neighborhood() { }
+    ~invert_full_neighborhood() { 
+      for(std::deque<move*>::iterator it = moves_m.begin(); 
+	  it != moves_m.end(); ++it)
+	delete *it;
+    }
 
     /// @brief Selects a different set of moves at each iteration.
     void refresh(mets::feasible_solution& s) { }
