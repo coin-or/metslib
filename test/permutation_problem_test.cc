@@ -3,6 +3,9 @@
 
 using namespace std;
 
+#if 1
+int main() {std::cerr << "This has to be implemented!" << std::endl; return 1;}
+#else
 class p : public mets::permutation_problem
 {
 public:
@@ -109,3 +112,4 @@ int main()
 
   return 0;
 }
+#endif

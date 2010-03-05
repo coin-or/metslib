@@ -44,21 +44,22 @@ mets::simulated_annealing::search()
         && current_temp_m >= 0.0)
     {
       gol_type actual_cost = working_solution_m.cost_function();
+      gol_type best_cost = best_solution_m.cost_function();
       moves_m.refresh(working_solution_m);
       for(movit = moves_m.begin(); movit != moves_m.end(); ++movit)
 	{
 	  // apply move and record proposed cost function
-	  (*movit)->apply(working_solution_m);
-	  
-	  // record cost
-	  gol_type cost = working_solution_m.cost_function();
+	  gol_type cost = (*movit)->evaluate(working_solution_m);
 	  
 	  double delta = ((double)(cost-actual_cost));
 	  if(delta < 0 || gen() < exp(-delta/(K_m*current_temp_m)))
 	    {
+	      // accepted: apply, record, lower temperature
+	      (*movit)->apply(working_solution_m);
 	      current_move_m = movit;
-	      if(cost < best_solution_m.cost_function())
+	      if(cost < best_cost)
 		{
+		  best_cost = cost;
 		  step_m = IMPROVEMENT_MADE;
 		  best_solution_m = working_solution_m;
 		  this->notify();
@@ -67,8 +68,6 @@ mets::simulated_annealing::search()
 	      this->notify();
 	      break;
 	    }
-	  // unapply move (if break was not called)
-	  (*movit)->unapply(working_solution_m);
 	} // end for each move
       
       current_temp_m = 

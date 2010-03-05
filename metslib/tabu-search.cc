@@ -40,31 +40,32 @@ mets::tabu_search::search()
       moves_m.refresh(working_solution_m);
       
       move_manager::iterator best_movit = moves_m.end(); 
-      
       gol_type best_move_cost = std::numeric_limits<gol_type>::max();
       
       for(move_manager::iterator movit = moves_m.begin(); 
 	  movit != moves_m.end(); ++movit)
 	{
-	  
 	  // apply move and record proposed cost function
-	  (*movit)->apply(working_solution_m);
-	  gol_type cost = working_solution_m.cost_function();
-
+	  gol_type cost = (*movit)->evaluate(working_solution_m);
+	  
 	  // save state of tabu and aspiration criteria
 	  bool is_tabu = tabu_list_m.is_tabu(working_solution_m, **movit);
-	  bool aspiration_criteria_met = false;
-	  if(is_tabu) // not interesting if this is not a tabu move
-	    aspiration_criteria_met = 
-	      aspiration_criteria_m(working_solution_m, *this);
-	  
-	  // unapply move
-	  (*movit)->unapply(working_solution_m);
 	  
 	  // for each non-tabu move record the best one
 	  if(cost < best_move_cost)
 	    {
-		if(!is_tabu || aspiration_criteria_met)
+
+	      bool aspiration_criteria_met = false;
+	      
+	      // not interesting if this is not a tabu move (and if we
+	      // are not improving over other moves)
+	      if(is_tabu) 
+		{
+		  aspiration_criteria_met = 
+		    aspiration_criteria_m(working_solution_m, **movit, *this);
+		}
+	      
+	      if(!is_tabu || aspiration_criteria_met)
 		{
 		  best_move_cost = cost;
 		  best_movit = current_move_m = movit;
@@ -80,11 +81,12 @@ mets::tabu_search::search()
       if(best_movit == moves_m.end())
 	throw no_moves_error();
 
-      // do the best non tabu move (unless overridden)
-      (*best_movit)->apply(working_solution_m);
-
       // make move tabu
       tabu_list_m.tabu(working_solution_m, **best_movit);
+
+      // do the best non tabu move (unless overridden by aspiration
+      // criteria, of course)
+      (*best_movit)->apply(working_solution_m);
       
       // call listener
       step_m = MOVE_MADE;
@@ -122,10 +124,11 @@ mets::tabu_list_chain::is_tabu(feasible_solution& sol, /* const */ move& mov)
 
 bool 
 mets::aspiration_criteria_chain::operator()(feasible_solution& fs, 
-					     abstract_search& ts)
+					    move& mov,
+					    abstract_search& ts)
 {
   if(next_m)
-    return next_m->operator()(fs, ts);
+    return next_m->operator()(fs, mov, ts);
   else
     return false;
 }

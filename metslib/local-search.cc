@@ -40,20 +40,15 @@ mets::local_search::search()
       {
 	moves_m.refresh(working_solution_m);
 	best_movit = moves_m.end();
+	gol_type best_cost = best_solution_m.cost_function();
 	for(move_manager::iterator movit = moves_m.begin();
 	    movit != moves_m.end(); ++movit)
 	  {
-	    // apply move and record proposed cost function
-	    (*movit)->apply(working_solution_m);
-	    // record cost
-	    gol_type cost = working_solution_m.cost_function();
-	    // unapply move
-	    (*movit)->unapply(working_solution_m);
-	    
-	    if(cost < best_solution_m.cost_function())
+	    // evaluate the cost after the move
+	    gol_type cost = (*movit)->evaluate(working_solution_m);
+	    if(cost < best_cost)
 	      {
-		// best_cost_m = cost;
-                best_solution_m = working_solution_m;
+		best_cost = cost;
 		best_movit = movit;
 		if(short_circuit_m) break;
 	      }
@@ -62,10 +57,11 @@ mets::local_search::search()
 	if(best_movit != moves_m.end()) 
 	  {
 	    (*best_movit)->apply(working_solution_m);
-	    // best_solution_m = working_solution_m;
+	    best_solution_m = working_solution_m;
 	    current_move_m = best_movit;
 	    this->notify();
 	  }
+
       } while(best_movit != moves_m.end());
   }
 }

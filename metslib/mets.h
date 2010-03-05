@@ -156,6 +156,14 @@ namespace mets {
 
   /// @brief interface of a feasible solution space to be searched
   /// with tabu search.
+  ///
+  /// Note that "feasible" is not intended w.r.t. the constraint of
+  /// the problem but only regarding the space we want the local
+  /// search to explore. From time to time allowing "feasible"
+  /// solutions to move in a portion of the space that is not feasible
+  /// in a stricter sense is non only allowed, but encouraged to
+  /// improve tabu search performances. In those cases the objective
+  /// function should account for unfeasibility with a penalty term.
   class feasible_solution
   {
   public:
@@ -272,18 +280,15 @@ namespace mets {
       }
   }
     
-
-
   /// @brief Move to be operated on a feasible solution.
   ///
   /// You must implement this (one or more types are allowed) for your
   /// problem.
   ///
-  /// You must provide an apply as well as an unapply method.
+  /// You must provide an apply as well as an evaluate method.
   ///
-  /// The unapply method should do the reverse of the apply or, if
-  /// this is too complex, should return the solution prior to the
-  /// last apply was called.
+  /// NOTE: this interface changed from 0.4.x to 0.5.x. The change was
+  /// needed to provide a more general interface.
   class move
   {
   public:
@@ -295,14 +300,19 @@ namespace mets {
     ///
     /// @brief Operates this move on sol.
     ///
+    /// This should actually change the solution.
     virtual void
-    apply(feasible_solution& sol) = 0;
+    apply(feasible_solution& sol) const = 0;
 
     ///
-    /// @brief Unapply the (last made) move.
+    /// @brief Evaluate the cost after the move.
     ///
-    virtual void
-    unapply(feasible_solution& sol) = 0;
+    /// What if we make this move? Local searches can be speed up by a
+    /// substantial amount if we are able to efficiently evaluate the
+    /// cost of the neighboring solutions without actually changing
+    /// the solution.
+    virtual gol_type
+    evaluate(const feasible_solution& sol) const = 0;
 
     /// @brief Method usefull for tracing purposes.
     virtual void print(ostream& os) const { };
@@ -313,7 +323,10 @@ namespace mets {
   ///
   /// If you implement this class you can use the
   /// mets::simple_tabu_list as a ready to use tabu list, but you must
-  /// implement copy, operator== and provide an hash funciton.
+  /// implement a copy operator, provide an hash funciton and provide
+  /// a corresponds_to() method that is responsible to find if a move
+  /// is "equal" to another (we don't use the operator==() here
+  /// because the concept of equality here is relaxed).
   class mana_move : public move
   {
   public:
@@ -321,9 +334,10 @@ namespace mets {
     virtual mana_move* 
     clone() const = 0;
     
-    /// @brief Tell if this move equals another (for mets::simple_tabu_list)
+    /// @brief Tell if this move equals another w.r.t. the tabu list
+    /// management (for mets::simple_tabu_list)
     virtual bool 
-    operator==(const mana_move& other) const = 0;
+    corresponds_to(const mana_move& other) const = 0;
     
     /// @brief Hash signature of this move (used by mets::simple_tabu_list)
     virtual size_t
@@ -354,19 +368,7 @@ namespace mets {
     apply(mets::feasible_solution& s)
     { permutation_problem& sol = reinterpret_cast<permutation_problem&>(s);
       sol.swap(p1, p2); }
-    
-    /// @brief Unapply the last move: in case of a swap the inverse move
-    /// is just the same swap.
-    void
-    unapply(mets::feasible_solution& s)
-    { this->apply(s); }
-    
-    /// @brief A method to clone self. Needed to insert the move in a
-    /// tabu list.
-    mana_move* 
-    clone() const 
-    { return new swap_elements(p1, p2); }
-    
+            
     /// @brief An hash function used by the tabu list (the hash value is
     /// used to insert the move in an hash set).
     size_t
@@ -406,19 +408,7 @@ namespace mets {
     /// @brief Virtual method that applies the move on a point
     void
     apply(mets::feasible_solution& s);
-    
-    /// @brief Unapply the last move: in case of a swap the inverse move
-    /// is just the same swap.
-    void
-    unapply(mets::feasible_solution& s)
-    { this->apply(s); }
-    
-    /// @brief A method to clone self. Needed to insert the move in a
-    /// tabu list.
-    mana_move* 
-    clone() const 
-    { return new invert_subsequence(p1, p2); }
-    
+        
     /// @brief An hash function used by the tabu list (the hash value is
     /// used to insert the move in an hash set).
     size_t
@@ -441,102 +431,6 @@ namespace mets {
     // friend class invert_full_neighborhood;
   };
 
-  
-  /// @brief A complex move.
-  ///
-  /// A complex move is made of 2 or more moves of some type. Moves
-  /// are applyed in order and unapplied in reverse order.
-  ///
-  /// Tip: construct the defaut instance, than add the moves you wish
-  /// with the add method.
-  class complex_mana_move : public mets::mana_move
-  {
-  protected:
-    typedef std::vector<mets::mana_move*> move_list_t;
-    move_list_t moves_m;
-
-  public:
-    /// @brief Construct a complex move (preallocate space for moves).
-    ///
-    /// @param n Number of preallocated moves
-    explicit
-    complex_mana_move(int n = 0) 
-      : mana_move(), moves_m(n)
-    {  for(move_list_t::iterator it(moves_m.begin()); it!=moves_m.end(); ++it)
-	*it = 0; }
-
-    /// @brief Copy ctor, clones all the included moves.
-    ///
-    /// NB: before copying a complex_mana_move be sure to have
-    /// assigned valid moves to each slot.
-    complex_mana_move(const complex_mana_move& o);
-    
-    /// @brief Dtor.
-    ~complex_mana_move();
-    
-    /// @brief Append a new move to the list.
-    ///
-    /// Enlarges the move list and assigns a copy of the given move to
-    /// the last position.
-    ///
-    /// @param m A pointer to the mets::mana_move to be added
-    void
-    push_back(mana_move* m)
-    { moves_m.push_back(m->clone()); }
-
-    /// @brief Returns the number of attached moves
-	size_t
-    size() const 
-    { return moves_m.size(); }
-
-    /// @brief Returns the pointer to the ii-th move.
-    ///
-    /// The pointer is returned by reference so that one
-    /// can assign a new instance to it. Be sure to delete
-    /// the previous pointer, if it's not null.
-    mana_move*&
-    operator[](unsigned int ii)
-    { return moves_m[ii]; }
-
-    /// @brief Returns a const pointer to the ii-th move.
-    const mana_move*
-    operator[](unsigned int ii) const
-    { return moves_m[ii]; }
-
-    /// @brief Applies all the moves at once.
-    /// 
-    /// If there is one not assigned move (you give 3 to the
-    /// constructor, but assign only two moves, or you give != 0 to
-    /// the costructor and then add moves only with the push_back) a
-    /// segfault will alert you. No check is made for performance
-    /// reason, be sure to have all valid moves.
-    void
-    apply(mets::feasible_solution& s);
-    
-    /// @brief Unapplies all the moves at once (in reverse order)
-    /// 
-    /// If there is one not assigned move (you give 3 to the
-    /// constructor, but assign only two moves, or you give != 0 to
-    /// the costructor and then add moves only with the push_back) a
-    /// segfault will alert you. No check is made for performance
-    /// reason, be sure to have all valid moves.
-    void
-    unapply(mets::feasible_solution& s);
-    
-    /// @brief Clone this complex move (cloning all the included moves)
-    mana_move* 
-    clone() const 
-    { return new complex_mana_move(*this); }
-    
-    /// @brief Create an hash number xoring the hashes of the included moves
-    size_t
-    hash() const;
-
-    /// @brief Compare two mets::complex_mana_moves for equality
-    bool operator==(const mana_move& o) const;
-  };
-  
-  
   /// @brief Neighborhood generator.
   ///
   /// The move manager can represent both Variable and Constant
@@ -603,20 +497,15 @@ namespace mets {
   public:
     /// @brief A neighborhood exploration strategy for mets::swap_elements.
     ///
-    /// This strategy selects *moves* random swaps and *complex_moves*
-    /// random double swaps.
+    /// This strategy selects *moves* random swaps 
     ///
     /// @param r a random number generator (e.g. an instance of
     /// std::tr1::minstd_rand0 or std::tr1::mt19936)
     ///
     /// @param moves the number of swaps to add to the exploration
     ///
-    /// @param complex_moves the number of random double swaps to add
-    /// to the exploration
-    ///
     swap_neighborhood(random_generator& r, 
-		      unsigned int moves, 
-		      unsigned int complex_moves);
+		      unsigned int moves);
 
     /// @brief Dtor.
     ~swap_neighborhood();
@@ -633,23 +522,16 @@ namespace mets {
     void randomize_move(swap_elements& m, unsigned int size);
   };
 
+  /*
   /// @brief Generates a the full swap neighborhood.
   class swap_full_neighborhood : public mets::move_manager
   {
   public:
     /// @brief A neighborhood exploration strategy for mets::swap_elements.
     ///
-    /// This strategy selects *moves* random swaps and *complex_moves*
-    /// random double swaps.
+    /// This strategy selects *moves* random swaps.
     ///
-    /// @param r a random number generator (e.g. an instance of
-    /// std::tr1::minstd_rand0 or std::tr1::mt19936)
-    ///
-    /// @param moves the number of swaps to add to the exploration
-    ///
-    /// @param complex_moves the number of random double swaps to add
-    /// to the exploration
-    ///
+    /// @param size the size of the problem
     swap_full_neighborhood(int size) : move_manager()
     {
       for(int ii(0); ii!=size-1; ++ii)
@@ -668,7 +550,9 @@ namespace mets {
     void refresh(mets::feasible_solution& s) { }
 
   };
+  */
 
+  /*
   /// @brief Generates a the full subsequence inversion neighborhood.
   class invert_full_neighborhood : public mets::move_manager
   {
@@ -692,7 +576,7 @@ namespace mets {
     void refresh(mets::feasible_solution& s) { }
 
   };
-
+  */
   /// @}
 
   /// @brief Functor class to permit hash_set of moves (used by tabu list)
@@ -709,7 +593,7 @@ namespace mets {
   {
     bool operator()(const Tp l, 
 		    const Tp r) const 
-    { return *l == *r; }
+    { return l->corresponds_to(*r); }
   };
 
   class abstract_search;
@@ -1144,7 +1028,7 @@ namespace mets {
     /// @param as The search instance.
     /// @return True if the move is to be accepted.
     virtual bool 
-    operator()(feasible_solution& fs, abstract_search& as);
+    operator()(feasible_solution& fs, move& mov, abstract_search& as);
 
   protected:
     aspiration_criteria_chain* next_m;
@@ -1188,6 +1072,9 @@ namespace mets {
     /// "tenure" solutions or some other peculiar fact that
     /// will avoid cycling.
     ///
+    /// Mind you! The solution here is the solution *before* applying
+    /// the move: this is for efficiency reason.
+    ///
     /// @param sol The current working solution
     /// @param mov The move to make tabu
     virtual void 
@@ -1200,6 +1087,9 @@ namespace mets {
     /// will avoid cycling. So it's not defined at this stage 
     /// if a move will be tabu or not at a certain state of the
     /// search: this depends on the implementation.
+    ///
+    /// Mind you! The solution here is the solution *before* applying
+    /// the move: this is for efficiency reason.
     ///
     /// @param sol The current working solution
     /// @param mov The move to make tabu
@@ -1438,12 +1328,13 @@ namespace mets {
     best_ever_criteria(aspiration_criteria_chain* next) 
       : aspiration_criteria_chain(next) {}
     bool 
-    operator()(feasible_solution& fs, abstract_search& ts)
+    operator()(feasible_solution& fs, move& mov, abstract_search& ts)
     { 
-      if(fs.cost_function() < ts.best_cost())
+      // TODO: this is not efficient
+      if(mov.evaluate(fs) < ts.best_cost())
 	return true;
       else
-	return aspiration_criteria_chain::operator()(fs, ts); 
+	return aspiration_criteria_chain::operator()(fs, mov, ts); 
     }
   };
   
@@ -1594,25 +1485,17 @@ namespace mets {
 /// @brief Operator<< for moves.
 std::ostream& operator<<(std::ostream& os, const mets::move& mov);
 
+/*
 //________________________________________________________________________
 template<typename random_generator>
-mets::swap_neighborhood<random_generator>::swap_neighborhood(random_generator& r, 
-							     unsigned int moves, 
-							     unsigned int complex_moves)
-  : mets::move_manager(), rng(r), int_range(0), n(moves), nc(complex_moves)
+mets::swap_neighborhood< random_generator
+			 >::swap_neighborhood(random_generator& r, 
+					      unsigned int moves)
+  : mets::move_manager(), rng(r), int_range(0), n(moves)
 { 
   // n simple moves
   for(unsigned int ii = 0; ii != n; ++ii) 
     moves_m.push_back(new swap_elements(0,0));
-  
-  // nc double moves
-  for(unsigned int ii = 0; ii != nc; ++ii) 
-    {
-      mets::complex_mana_move& cm = *new mets::complex_mana_move(2);
-      cm[0] = new swap_elements(0,0);
-      cm[1] = new swap_elements(0,0);
-      moves_m.push_back(&cm);
-    }
 }  
 
 template<typename random_generator>
@@ -1638,23 +1521,12 @@ mets::swap_neighborhood<random_generator>::refresh(mets::feasible_solution& s)
       ++ii;
     }
   
-  // the following nc are complex_mana_moves made of 2 qap_moveS
-  for(unsigned int cnt = 0; cnt != nc; ++cnt)
-    {
-      mets::complex_mana_move& cm = 
-	static_cast<mets::complex_mana_move&>(**ii);
-      for(int jj = 0; jj != 2; ++jj)
-	{
-	  swap_elements* m = static_cast<swap_elements*>(cm[jj]);
-	  randomize_move(*m, sol.size());
-	}
-      ++ii;
-    }
 }
 
 template<typename random_generator>
 void
-mets::swap_neighborhood<random_generator>::randomize_move(swap_elements& m, unsigned int size)
+mets::swap_neighborhood<random_generator
+			>::randomize_move(swap_elements& m, unsigned int size)
 {
   int p1 = int_range(rng, size);
   int p2 = int_range(rng, size);
@@ -1665,5 +1537,5 @@ mets::swap_neighborhood<random_generator>::randomize_move(swap_elements& m, unsi
   m.p1 = std::min(p1,p2); 
   m.p2 = std::max(p1,p2); 
 }
-
+*/
 #endif

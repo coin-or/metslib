@@ -19,7 +19,7 @@ public:
   my_move(int i) : i_m(i) 
   { }
 
-  bool operator==(const mana_move& m) const
+  bool corresponds_to(const mana_move& m) const
   { const my_move& o = static_cast<const my_move&>(m); return i_m == o.i_m; }
 
   my_move* clone() const
@@ -28,8 +28,8 @@ public:
   size_t hash() const
   { return i_m; }
 
-  void apply(mets::feasible_solution&) {}
-  void unapply(mets::feasible_solution&) {}
+  void apply(mets::feasible_solution&) const {}
+  mets::gol_type evaluate(const mets::feasible_solution&) const {}
 
 };
 
