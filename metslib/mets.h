@@ -160,10 +160,10 @@ namespace mets {
   /// Note that "feasible" is not intended w.r.t. the constraint of
   /// the problem but only regarding the space we want the local
   /// search to explore. From time to time allowing "feasible"
-  /// solutions to move in a portion of the space that is not feasible
-  /// in a stricter sense is non only allowed, but encouraged to
-  /// improve tabu search performances. In those cases the objective
-  /// function should account for unfeasibility with a penalty term.
+  /// solutions to move in a portion of space that is not feasible in
+  /// a stricter sense is non only allowed, but encouraged to improve
+  /// tabu search performances. In those cases the objective function
+  /// should account for unfeasibility with a penalty term.
   class feasible_solution
   {
   public:
@@ -257,9 +257,15 @@ namespace mets {
   template<typename random_generator>
   void random_shuffle(permutation_problem& p, random_generator& rng)
   {
+#if defined (HAVE_UNORDERED_MAP) && !defined (TR1_MIXED_NAMESPACE)
+    std::uniform_int<> unigen(0, p.pi_m.size());
+    std::variate_generator<random_generator, 
+      std::uniform_int<> >gen(rng, unigen);
+#else
     std::tr1::uniform_int<> unigen(0, p.pi_m.size());
     std::tr1::variate_generator<random_generator, 
       std::tr1::uniform_int<> >gen(rng, unigen);
+#endif
     std::random_shuffle(p.pi_m.begin(), p.pi_m.end(), gen);
   }
   
@@ -269,7 +275,11 @@ namespace mets {
   template<typename random_generator>
   void perturbate(permutation_problem& p, unsigned int n, random_generator& rng)
   {
+#if defined (HAVE_UNORDERED_MAP) && !defined (TR1_MIXED_NAMESPACE)
+    std::uniform_int<> int_range;
+#else
     std::tr1::uniform_int<> int_range;
+#endif
     for(unsigned int ii=0; ii!=n;++ii) 
       {
 	int p1 = int_range(rng, p.size());
@@ -323,10 +333,14 @@ namespace mets {
   ///
   /// If you implement this class you can use the
   /// mets::simple_tabu_list as a ready to use tabu list, but you must
-  /// implement a copy operator, provide an hash funciton and provide
-  /// a corresponds_to() method that is responsible to find if a move
-  /// is "equal" to another (we don't use the operator==() here
-  /// because the concept of equality here is relaxed).
+  /// implement a clone() method, provide an hash funciton and provide
+  /// a operator==() method that is responsible to find if a move is
+  /// equal to another.
+  ///
+  /// If the desired behaviour is to declare tabu the opposite of the
+  /// last made move you should also override the opposite_of()
+  /// method.
+  ///
   class mana_move : public move
   {
   public:
@@ -334,10 +348,22 @@ namespace mets {
     virtual mana_move* 
     clone() const = 0;
     
+    /// @brief Create and return a new move that is the reverse of
+    /// this one
+    ///
+    /// By default this just calls "clone". If this method is not
+    /// overridden the mets::simple_tabu_list declares tabu the last
+    /// made move. Reimplementing this method it is possibile to
+    /// actually declare as tabu the opposite of the last made move
+    /// (if we moved a to b we can declare tabu moving b to a).
+    virtual mana_move*
+    opposite_of() const 
+    { return clone(); }
+
     /// @brief Tell if this move equals another w.r.t. the tabu list
     /// management (for mets::simple_tabu_list)
     virtual bool 
-    corresponds_to(const mana_move& other) const = 0;
+    operator==(const mana_move& other) const = 0;
     
     /// @brief Hash signature of this move (used by mets::simple_tabu_list)
     virtual size_t
@@ -491,7 +517,11 @@ namespace mets {
   
 
   /// @brief Generates a stochastic subset of the neighborhood.
+#if defined (HAVE_UNORDERED_MAP) && !defined (TR1_MIXED_NAMESPACE)
+  template<typename random_generator = std::minstd_rand0>
+#else
   template<typename random_generator = std::tr1::minstd_rand0>
+#endif
   class swap_neighborhood : public mets::move_manager
   {
   public:
@@ -515,7 +545,11 @@ namespace mets {
     
   protected:
     random_generator& rng;
+#if defined (HAVE_UNORDERED_MAP) && !defined (TR1_MIXED_NAMESPACE)
+    std::uniform_int<> int_range;
+#else
     std::tr1::uniform_int<> int_range;
+#endif
     unsigned int n;
     unsigned int nc;
 
@@ -579,7 +613,7 @@ namespace mets {
   */
   /// @}
 
-  /// @brief Functor class to permit hash_set of moves (used by tabu list)
+  /// @brief Functor class to allow hash_set of moves (used by tabu list)
   class mana_move_hash 
   {
   public:
@@ -587,13 +621,13 @@ namespace mets {
     {return mov->hash();}
   };
   
-  /// @brief Functor class to permit hash_set of moves (used by tabu list)
+  /// @brief Functor class to allow hash_set of moves (used by tabu list)
   template<typename Tp>
   struct dereferenced_equal_to 
   {
     bool operator()(const Tp l, 
 		    const Tp r) const 
-    { return l->corresponds_to(*r); }
+    { return l->operator==(*r); }
   };
 
   class abstract_search;
@@ -1294,7 +1328,7 @@ namespace mets {
 
   protected:
     typedef std::deque<move*> move_list_type;
-#ifdef __GXX_EXPERIMENTAL_CXX0X__
+#if defined (HAVE_UNORDERED_MAP) && !defined (TR1_MIXED_NAMESPACE)
     typedef std::unordered_map<
       mana_move*, // Key type
       int, //insert a move and the number of times it's present in the list
@@ -1316,8 +1350,8 @@ namespace mets {
   /// This is one of the best known aspiration criteria
   /// ready to be used in your tabu-search implementation.
   ///
-  /// This aspiration criteria is met when a move
-  /// (even a tabu one) would result in a global improvement.
+  /// This aspiration criteria is met when a tabu move would result in
+  /// a global improvement.
   class best_ever_criteria 
     : public aspiration_criteria_chain
   {
@@ -1330,7 +1364,8 @@ namespace mets {
     bool 
     operator()(feasible_solution& fs, move& mov, abstract_search& ts)
     { 
-      // TODO: this is not efficient
+      // TODO: this is not efficient (anyway we are doing this only
+      // with tabu moves).
       if(mov.evaluate(fs) < ts.best_cost())
 	return true;
       else

@@ -145,7 +145,7 @@ void
 mets::simple_tabu_list::tabu(feasible_solution& sol, /* const */ move& mov)
 {
   mana_move* mc = 
-    dynamic_cast<mana_move&>(mov).clone();
+    dynamic_cast<mana_move&>(mov).opposite_of();
 
   // This does nothing if the move was already tabu (can happen when
   // aspiration criteria is met).
@@ -198,4 +198,3 @@ mets::simple_tabu_list::is_tabu(feasible_solution& sol, move& mov)
 
   return tabu_list_chain::is_tabu(sol, mov);
 }
-
