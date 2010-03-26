@@ -57,7 +57,7 @@ mets::simulated_annealing::search()
 	      // accepted: apply, record, lower temperature
 	      (*movit)->apply(working_solution_m);
 	      current_move_m = movit;
-	      if(cost < best_cost)
+	      if(cost < best_cost - epsilon)
 		{
 		  best_cost = cost;
 		  step_m = IMPROVEMENT_MADE;

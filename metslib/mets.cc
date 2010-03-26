@@ -103,7 +103,7 @@ bool
 mets::noimprove_termination_criteria::operator()(feasible_solution& fs, 
 						 abstract_search& ts)
 {
-  if(ts.best_cost() < best_cost_m)
+  if(ts.best_cost() < best_cost_m - epsilon)
     {
       best_cost_m = ts.best_cost();
       second_guess_m = std::max(second_guess_m, 
@@ -124,7 +124,7 @@ bool
 mets::noimprove_termination_criteria::operator()(feasible_solution& fs)
 {
   gol_type cost = fs.cost_function();
-  if(cost < best_cost_m)
+  if(cost < best_cost_m - epsilon)
     {
       best_cost_m = cost;
       second_guess_m = std::max(second_guess_m, 

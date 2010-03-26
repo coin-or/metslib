@@ -46,7 +46,7 @@ mets::local_search::search()
 	  {
 	    // evaluate the cost after the move
 	    gol_type cost = (*movit)->evaluate(working_solution_m);
-	    if(cost < best_cost)
+	    if(cost < best_cost - epsilon)
 	      {
 		best_cost = cost;
 		best_movit = movit;

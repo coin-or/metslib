@@ -105,6 +105,8 @@
 
 #include "observer.h"
 
+static const double epsilon = 1e-7;
+
 ///
 /// @brief Metaheuristic library namespace.
 ///

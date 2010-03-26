@@ -52,7 +52,7 @@ mets::tabu_search::search()
 	  bool is_tabu = tabu_list_m.is_tabu(working_solution_m, **movit);
 	  
 	  // for each non-tabu move record the best one
-	  if(cost < best_move_cost)
+	  if(cost < best_move_cost - epsilon)
 	    {
 
 	      bool aspiration_criteria_met = false;
@@ -93,7 +93,7 @@ mets::tabu_search::search()
       this->notify();
       
       // check weather this is the best ever
-      if(best_move_cost < best_solution_m.cost_function())
+      if(best_move_cost < best_solution_m.cost_function() - epsilon)
 	{
 	  // best_cost_m = best_move_cost;
 	  best_solution_m = working_solution_m;
