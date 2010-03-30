@@ -15,94 +15,8 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 #include "mets.h"
-
-using namespace std;
-
-mets::tabu_search::tabu_search(feasible_solution& starting_solution, 
-			       feasible_solution& best_sol, 
-			       move_manager& move_manager_inst,
-			       tabu_list_chain& tabus,
-			       aspiration_criteria_chain& aspiration,
-			       termination_criteria_chain& termination)
-  : abstract_search(starting_solution, best_sol, move_manager_inst),
-    tabu_list_m(tabus),
-    aspiration_criteria_m(aspiration),
-    termination_criteria_m(termination)
-{}
-
-void
-mets::tabu_search::search()
-  throw(no_moves_error)
-{
-  while(!termination_criteria_m(working_solution_m, *this))
-    {
-      moves_m.refresh(working_solution_m);
-      
-      move_manager::iterator best_movit = moves_m.end(); 
-      gol_type best_move_cost = std::numeric_limits<gol_type>::max();
-      
-      for(move_manager::iterator movit = moves_m.begin(); 
-	  movit != moves_m.end(); ++movit)
-	{
-	  // apply move and record proposed cost function
-	  gol_type cost = (*movit)->evaluate(working_solution_m);
-	  
-	  // save state of tabu and aspiration criteria
-	  bool is_tabu = tabu_list_m.is_tabu(working_solution_m, **movit);
-	  
-	  // for each non-tabu move record the best one
-	  if(cost < best_move_cost - epsilon)
-	    {
-
-	      bool aspiration_criteria_met = false;
-	      
-	      // not interesting if this is not a tabu move (and if we
-	      // are not improving over other moves)
-	      if(is_tabu) 
-		{
-		  aspiration_criteria_met = 
-		    aspiration_criteria_m(working_solution_m, **movit, *this);
-		}
-	      
-	      if(!is_tabu || aspiration_criteria_met)
-		{
-		  best_move_cost = cost;
-		  best_movit = current_move_m = movit;
-		  if(aspiration_criteria_met)
-		    {
-		      step_m = ASPIRATION_CRITERIA_MET;
-		      this->notify();
-		    }
-		}
-	    }
-	} // end for each move
-      
-      if(best_movit == moves_m.end())
-	throw no_moves_error();
-
-      // make move tabu
-      tabu_list_m.tabu(working_solution_m, **best_movit);
-
-      // do the best non tabu move (unless overridden by aspiration
-      // criteria, of course)
-      (*best_movit)->apply(working_solution_m);
-      
-      // call listener
-      step_m = MOVE_MADE;
-      this->notify();
-      
-      // check weather this is the best ever
-      if(best_move_cost < best_solution_m.cost_function() - epsilon)
-	{
-	  // best_cost_m = best_move_cost;
-	  best_solution_m = working_solution_m;
-	  step_m = IMPROVEMENT_MADE;
-	  this->notify();
-	}
-      
-    } // end while(!termination)
-}
 
 // chain of responsibility
 
@@ -121,18 +35,6 @@ mets::tabu_list_chain::is_tabu(feasible_solution& sol, /* const */ move& mov)
   else 
     return false;
 }
-
-bool 
-mets::aspiration_criteria_chain::operator()(feasible_solution& fs, 
-					    move& mov,
-					    abstract_search& ts)
-{
-  if(next_m)
-    return next_m->operator()(fs, mov, ts);
-  else
-    return false;
-}
-
 
 mets::simple_tabu_list::~simple_tabu_list()
 { 
