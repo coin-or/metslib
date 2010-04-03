@@ -19,6 +19,7 @@ debian/rules -text
 doxydoc/Makefile.am -text
 doxydoc/doxygen-footer.html -text
 doxydoc/doxygen.conf -text
+m4/ax_prefix_config_h.m4 -text
 m4/shave.m4 -text
 /metslib.pc.in -text
 metslib/Makefile.am -text
