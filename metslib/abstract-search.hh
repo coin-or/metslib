@@ -1,17 +1,191 @@
-#ifndef ABSTRACT_SEARCH_HH_
-#define ABSTRACT_SEARCH_HH_
+#ifndef METS_ABSTRACT_SEARCH_HH_
+#define METS_ABSTRACT_SEARCH_HH_
 
 namespace mets {
 
   /// @defgroup common Common pieces
   /// @{
 
+  /// @brief The solution recorder is used by search algorithm, at the
+  /// end of each iteration, to record the best seen solution.
+  /// 
+  /// The concept of best is externalized so that you can record the
+  /// best ever solution met or the best solution that matches some
+  /// other criteria (e.g. feasibility constraints relaxed in the
+  /// feasible_solution implementation of the cost function).
+  ///
+  class solution_recorder {
+  public:
+    /// @brief Default ctor.
+    solution_recorder() {}
+    /// @brief Unimplemented copy ctor.
+    solution_recorder(const solution_recorder&);
+    /// @brief Unimplemented assignment operator.
+    solution_recorder& operator=(const solution_recorder&);
 
-  /// @brief An object that is called back during search process
-  template<typename search_type>
-  class search_listener : public observer<search_type>
+    /// @brief A virtual dtor.
+    virtual 
+    ~solution_recorder();
+
+    /// @brief Accept is called at the end of each iteration for an
+    /// opportunity to record the best move ever.
+    ///
+    /// (this is a chain of responsibility)
+    ///
+    virtual bool 
+    accept(feasible_solution& sol) = 0;
+  };
+
+  /// @brief An abstract search.
+  ///
+  /// @see mets::tabu_search, mets::simulated_annealing, mets::local_search
+  template<typename move_manager_type>
+  class abstract_search : public subject< abstract_search<move_manager_type> >
   {
   public:
+    /// @brief Set some common values needed for neighborhood based
+    /// metaheuristics.
+    ///
+    /// @param working The working solution (this will be modified
+    /// during search) 
+    ///
+    /// @param recorder A solution recorder instance used to record
+    /// the best solution found
+    ///
+    /// @param moveman A problem specific implementation of the
+    /// move_manager_type used to generate the neighborhood.
+    ///
+    abstract_search(feasible_solution& working,
+		    solution_recorder& recorder,
+		    move_manager_type& moveman)
+      : subject<abstract_search<move_manager_type> >(), 
+	solution_recorder_m(recorder),
+	working_solution_m(working),
+	moves_m(moveman),
+	current_move_m(),
+	step_m()
+    { }
+			 
+    /// purposely not implemented (see Effective C++)
+    abstract_search(const abstract_search<move_manager_type>&);
+    /// purposely not implemented (see Effective C++)
+    abstract_search& operator==(const abstract_search<move_manager_type>&);
+
+    /// @brief Virtual destructor.
+    virtual 
+    ~abstract_search() 
+    { };
+
+    /// @brief We just made a move.
+    static const int MOVE_MADE = 0;
+    /// @brief Our solution_recorder_chain object reported an improvement
+    static const int IMPROVEMENT_MADE = 0;
+
+    /// @brief This method starts the search.
+    /// 
+    /// Remember that this is a minimization.
+    ///
+    /// An exception mets::no_moves_error can be risen when no move is
+    /// possible.
+    virtual void
+    search() 
+      throw(no_moves_error) = 0;
+
+    /// @brief The solution recorder instance.
+    const solution_recorder&
+    get_solution_recorder() const 
+    { return solution_recorder_m; };
+
+    /// @brief The current working solution.
+    const feasible_solution&
+    working() const 
+    { return working_solution_m; }
+    
+    feasible_solution&
+    working() 
+    { return working_solution_m; }
+
+    /// @brief The last move made
+    const move&
+    current_move() const 
+    { return **current_move_m; }
+
+    /// @brief The last move made
+    move&
+    current_move() 
+    { return **current_move_m; }
+ 
+    /// @brief The move manager used by this search
+    const move_manager_type& 
+    move_manager() const 
+    { return moves_m; }
+
+    /// @brief The move manager used by this search
+    move_manager_type& 
+    move_manager() 
+    { return moves_m; }
+
+    /// @brief The current step of the algorithm (to be used by the
+    ///        observers).
+    ///        
+    /// When you implement a new type of search you should set step_m
+    /// protected variable to the status of the algorithm
+    /// (0 = "MOVE_MADE", 1 = "IMPROVEMENT_MADE", etc.).
+    int
+    step() const 
+    { return step_m; }
+    
+  protected:
+    solution_recorder& solution_recorder_m;
+    feasible_solution& working_solution_m;
+    move_manager_type& moves_m;
+    typename move_manager_type::iterator current_move_m;
+    int step_m;
+  };
+
+  /// @}
+
+  /// @defgroup common Common pieces
+  /// @{
+
+  /// @brief The best ever solution recorder can be used as a simple
+  /// solution recorder that just records the best copyable solution
+  /// found during its lifetime.
+  /// 
+  class best_ever_solution : public solution_recorder 
+  {
+  public:
+    best_ever_solution(copyable_solution& best) : 
+      solution_recorder(), 
+      best_ever_m(best) 
+    { }
+
+    /// @brief Unimplemented default ctor.
+    best_ever_solution();
+    /// @brief Unimplemented copy ctor.
+    best_ever_solution(const best_ever_solution&);
+    /// @brief Unimplemented assignment operator.
+    best_ever_solution& operator=(const best_ever_solution&);
+
+    /// @brief Accept is called at the end of each iteration for an
+    /// opportunity to record the best move ever.
+    bool accept(feasible_solution& sol);
+
+    /// @brief Returns the best solution found since the beginning.
+    const copyable_solution& best_ever() const 
+    { return best_ever_m; }
+
+  protected:
+    /// @brief Records the best solution
+    copyable_solution& best_ever_m;
+  };
+    
+  /// @brief An object that is called back during the search progress.
+  template<typename move_manager_type>
+  class search_listener : public observer<abstract_search<move_manager_type> >
+  {
+  public:
+    typedef abstract_search<move_manager_type> search_type;
     /// @brief A new observer (listener) of a search process, remember
     /// to attach the created object to the search process to be
     /// observed (mets::search_type::attach())
@@ -38,134 +212,5 @@ namespace mets {
   /// @}
 
 
-  /*
-  template<typename move_manager_t>
-  struct move_manager_traits {
-    typedef typename move_manager_t::const_iterator const_iterator;
-    typedef typename move_manager_t::iterator iterator;
-    typedef typename move_manager_t::size_type size_type;
-    typedef typename move_manager_t::value_type vale_type;
-  };
-  */
-
-  /// @brief An abstract search process.
-  ///
-  /// This has a method that should be implemented by subclasses to
-  /// start the actual search.
-  ///
-  /// @see mets::tabu_search, mets::simulated_annealing, mets::local_search
-  template<typename move_manager_type>
-  class abstract_search : public subject< abstract_search<move_manager_type> >
-  {
-  public:
-    /// @brief Set some common values needed for single point
-    /// metaheuristics.
-    ///
-    /// @param working The working solution (this will be modified
-    /// during search) 
-    ///
-    /// @param best_so_far A different solution
-    /// instance used to store the best solution found
-    ///
-    /// @param moveman A problem specific implementation of the
-    /// move_manager_type used to generate the neighborhood.
-    ///
-    abstract_search(feasible_solution& working,
-		    feasible_solution& best_so_far,
-		    move_manager_type& moveman)
-      : subject<abstract_search<move_manager_type> >(), 
-	best_solution_m(best_so_far),
-	working_solution_m(working),
-	moves_m(moveman),
-	current_move_m(),
-	step_m()
-    {
-      if(&working == &best_so_far)
-	{
-	  throw std::runtime_error("starting_point and best_so_far "
-				   "must be different instances.");
-	}
-    }
-			 
-    /// purposely not implemented (see Effective C++)
-    abstract_search(const abstract_search<move_manager_type>&);
-
-    /// @brief Virtual destructor.
-    virtual 
-    ~abstract_search() 
-    { };
-
-    /// We just made a move.
-    static const int MOVE_MADE = 0;
-
-    /// We just made a globel improvement.
-    static const int IMPROVEMENT_MADE = 1;
-
-    /// @brief This method starts the search process.
-    /// 
-    /// Remember that this is a minimization process.
-    ///
-    /// An exception mets::no_moves_error can be risen when no move is
-    /// possible.
-    virtual void
-    search() 
-      throw(no_moves_error) = 0;
-
-    /// @brief The best solution so far.
-    virtual const feasible_solution&
-    best() const 
-    { return best_solution_m; };
-
-    /// @brief The current working solution.
-    virtual const feasible_solution&
-    working() const 
-    { return working_solution_m; }
-
-    virtual feasible_solution&
-    working() 
-    { return working_solution_m; }
-
-    /// @brief The last move made
-    virtual const move&
-    current_move() const 
-    { return **current_move_m; }
-
-    /// @brief The last move made
-    virtual move&
-    current_move() 
-    { return **current_move_m; }
- 
-    /// @brief The move manager used by this search
-    const move_manager_type& 
-    get_move_manager() const 
-    { return moves_m; }
-
-    /// @brief The move manager used by this search
-    move_manager_type& 
-    get_move_manager() 
-    { return moves_m; }
-
-    /// @brief The current step of the algorithm
-    ///        for use of the observers.
-    ///        
-    /// When you implement a new type of search you should set step_m
-    /// protected variable to the status of the algorithm
-    /// ("MOVE_MADE", "IMPROVEMENT_MADE", etc.).
-    virtual int
-    step() const 
-    { return step_m; }
-
-    /// @brief Best solution cost so far.
-    virtual gol_type
-    best_cost() const 
-    { return best_solution_m.cost_function(); };
-
-  protected:
-    feasible_solution& best_solution_m;
-    feasible_solution& working_solution_m;
-    move_manager_type& moves_m;
-    typename move_manager_type::iterator current_move_m;
-    int step_m;
-  };
 }
 #endif

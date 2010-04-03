@@ -1,7 +1,25 @@
-#ifndef TABU_SEARCH_HH_
-#define TABU_SEARCH_HH_
+// METSlib source file - tabu-search.hh                          -*- C++ -*-
+//
+// Copyright (C) 2006-2010 Mirko Maischberger <mirko.maischberger@gmail.com>
+//
+//    This program is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//   You should have received a copy of the GNU General Public License
+//   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+#ifndef METS_TABU_SEARCH_HH_
+#define METS_TABU_SEARCH_HH_
 
 namespace mets {
+
   /// @defgroup tabu_search Tabu Search
   /// @{
 
@@ -15,7 +33,6 @@ namespace mets {
   ///
   /// Aspiration critera can be chained so a criteria can decorate
   /// another criteria
-  template<typename search_type>
   class aspiration_criteria_chain
   {
   public:
@@ -23,31 +40,49 @@ namespace mets {
     /// 
     /// @param next Optional next criteria in the chain.
     explicit
-    aspiration_criteria_chain(aspiration_criteria_chain<search_type> *next = 0)
+    aspiration_criteria_chain(aspiration_criteria_chain *next = 0)
       : next_m(next) 
     { }
-
+    
     /// purposely not implemented (see Effective C++)
-    aspiration_criteria_chain
-    (const aspiration_criteria_chain<search_type>& other);
-    aspiration_criteria_chain<search_type>& 
-    operator=(const aspiration_criteria_chain<search_type>& other);
+    aspiration_criteria_chain(const aspiration_criteria_chain& other);
+    /// purposely not implemented (see Effective C++)
+    aspiration_criteria_chain& 
+    operator=(const aspiration_criteria_chain& other);
 
     /// @brief Virtual destructor.
     virtual 
     ~aspiration_criteria_chain() 
     { } 
 
+    /// @brief A method to reset this aspiration criteria chain to its
+    /// original state.
+    virtual void 
+    reset();
+
+    /// @brief This is a callback function from the algorithm that
+    /// tells us that a move was accepted.
+    ///
+    /// You can use this function to update the aspiration criteria
+    /// based on the current search status. (e.g. record the best cost
+    /// for a best ever criteria)
+    ///
+    /// @param fs The current working solution (after applying move).
+    /// @param mov The accepted move (the move just made).
+    /// @return True if the move is to be accepted.
+    virtual void 
+    accept(feasible_solution& fs, move& mov);
+    
     /// @brief The function that decides if we shoud accept a tabu move
     ///
-    /// @param fs The current working solution.
-    /// @param as The search instance.
+    /// @param fs The current working solution (before applying move).
+    /// @param mov The move to be made (the move that is being evaluated).
     /// @return True if the move is to be accepted.
     virtual bool 
-    operator()(feasible_solution& fs, move& mov, search_type& as);
-
+    operator()(feasible_solution& fs, move& mov) const;
+    
   protected:
-    aspiration_criteria_chain<search_type>* next_m;
+    aspiration_criteria_chain* next_m;
   };
 
   ///
@@ -110,7 +145,7 @@ namespace mets {
     /// @param sol The current working solution
     /// @param mov The move to make tabu
     virtual bool 
-    is_tabu(feasible_solution& sol, move& mov) = 0;
+    is_tabu(feasible_solution& sol, move& mov) const = 0;
 
     ///
     /// @brief Tenure of this tabu list.
@@ -119,7 +154,7 @@ namespace mets {
     /// tabu memory)
     ///
     virtual unsigned int
-    tenure() 
+    tenure() const
     { return tenure_m; }
 
     ///
@@ -128,9 +163,8 @@ namespace mets {
     /// @param tenure: the new tenure of the list.
     ///
     virtual void
-    tenure(unsigned int tenure) { 
-      tenure_m = tenure;
-    }
+    tenure(unsigned int tenure) 
+    { tenure_m = tenure; }
 
   protected:
     tabu_list_chain* next_m;
@@ -154,8 +188,8 @@ namespace mets {
     /// @param starting_solution  The working solution (this
     /// will be modified during search).
     ///
-    /// @param best_so_far A different solution
-    /// instance used to store the best solution found.
+    /// @param best_recorder A solution recorder used to record the
+    /// best solution found during the search.
     ///
     /// @param move_manager_inst A problem specific implementation of the
     /// move_manager_type used to generate the neighborhood.
@@ -172,11 +206,11 @@ namespace mets {
     /// when temperature reaches 0.
     ///
     tabu_search(feasible_solution& starting_solution, 
-		feasible_solution& best_sol, 
+		solution_recorder& best_recorder, 
 		move_manager_type& move_manager_inst,
 		tabu_list_chain& tabus,
-		aspiration_criteria_chain<search_type>& aspiration,
-		termination_criteria_chain<search_type>& termination);
+		aspiration_criteria_chain& aspiration,
+		termination_criteria_chain& termination);
 
     tabu_search(const search_type&);
     search_type& operator=(const search_type&);
@@ -200,18 +234,18 @@ namespace mets {
     /// @brief The tabu list used by this tabu search
     const tabu_list_chain& 
     get_tabu_list() const { return tabu_list_m; }
-
+    
     /// @brief The aspiration criteria used by this tabu search
-    const aspiration_criteria_chain<search_type>& 
+    const aspiration_criteria_chain& 
     get_aspiration_criteria() const { return aspiration_criteria_m; }
 
     /// @brief The termination criteria used by this tabu search
-    const termination_criteria_chain<search_type>& 
+    const termination_criteria_chain& 
     get_termination_criteria() const { return termination_criteria_m; }
   protected:
     tabu_list_chain& tabu_list_m;
-    aspiration_criteria_chain<search_type>& aspiration_criteria_m;
-    termination_criteria_chain<search_type>& termination_criteria_m;
+    aspiration_criteria_chain& aspiration_criteria_m;
+    termination_criteria_chain& termination_criteria_m;
   };
 
   /// @brief Simplistic implementation of a tabu-list.
@@ -270,11 +304,11 @@ namespace mets {
     /// @return True if this move was already made during the last
     /// tenure iterations
     bool
-    is_tabu(feasible_solution& sol, move& mov);
+    is_tabu(feasible_solution& sol, move& mov) const;
 
   protected:
     typedef std::deque<move*> move_list_type;
-#if defined (HAVE_UNORDERED_MAP) && !defined (TR1_MIXED_NAMESPACE)
+#if defined (METSLIB_HAVE_UNORDERED_MAP) && !defined (METSLIB_TR1_MIXED_NAMESPACE)
     typedef std::unordered_map<
       mana_move*, // Key type
       int, //insert a move and the number of times it's present in the list
@@ -298,26 +332,28 @@ namespace mets {
   ///
   /// This aspiration criteria is met when a tabu move would result in
   /// a global improvement.
-  template<typename search_type>
-  class best_ever_criteria 
-    : public aspiration_criteria_chain<search_type>
+  class best_ever_criteria : public aspiration_criteria_chain
   {
   public:
-    best_ever_criteria() 
-      : aspiration_criteria_chain<search_type>() {}
     explicit
-    best_ever_criteria(aspiration_criteria_chain<search_type>* next) 
-      : aspiration_criteria_chain<search_type>(next) {}
+    best_ever_criteria(double min_improvement = 1e-6);
+
+    explicit
+    best_ever_criteria(aspiration_criteria_chain* next,
+		       double min_improvement = 1e-6);
+    
+    void 
+    reset();
+
+    void
+    accept(feasible_solution& fs, move& mov);
+
     bool 
-    operator()(feasible_solution& fs, move& mov, search_type& ts)
-    { 
-      // TODO: this is not efficient (anyway we are doing this only
-      // with tabu moves).
-      if(mov.evaluate(fs) < ts.best_cost())
-	return true;
-      else
-	return aspiration_criteria_chain<search_type>::operator()(fs, mov, ts); 
-    }
+    operator()(feasible_solution& fs, move& mov) const;
+
+  protected:
+    gol_type best_m;
+    gol_type tolerance_m;
   };
   
   /// @}
@@ -325,14 +361,14 @@ namespace mets {
 
 template<typename move_manager_t>
 mets::tabu_search<move_manager_t>::
-tabu_search(feasible_solution& starting_solution, 
-	    feasible_solution& best_sol, 
-	    move_manager_t& move_manager_inst,
-	    tabu_list_chain& tabus,
-	    aspiration_criteria_chain<search_type>& aspiration,
-	    termination_criteria_chain<search_type>& termination)
+tabu_search (feasible_solution& starting_solution, 
+	     solution_recorder& best_recorder, 
+	     move_manager_t& move_manager_inst,
+	     tabu_list_chain& tabus,
+	     aspiration_criteria_chain& aspiration,
+	     termination_criteria_chain& termination)
   : abstract_search<move_manager_t>(starting_solution, 
-				    best_sol, 
+				    best_recorder, 
 				    move_manager_inst),
     tabu_list_m(tabus),
     aspiration_criteria_m(aspiration),
@@ -344,7 +380,7 @@ void mets::tabu_search<move_manager_t>::search()
   throw(no_moves_error)
 {
   typedef abstract_search<move_manager_t> base_t;
-  while(!termination_criteria_m(base_t::working_solution_m, *this))
+  while(!termination_criteria_m(base_t::working_solution_m))
     {
       base_t::moves_m.refresh(base_t::working_solution_m);
       
@@ -357,12 +393,12 @@ void mets::tabu_search<move_manager_t>::search()
 	  // apply move and record proposed cost function
 	  gol_type cost = (*movit)->evaluate(base_t::working_solution_m);
 	  
-	  // save state of tabu and aspiration criteria
+	  // save tabu status
 	  bool is_tabu = tabu_list_m.is_tabu(base_t::working_solution_m, 
 					     **movit);
 	  
 	  // for each non-tabu move record the best one
-	  if(cost < best_move_cost - epsilon)
+	  if(cost < best_move_cost)
 	    {
 
 	      bool aspiration_criteria_met = false;
@@ -373,8 +409,7 @@ void mets::tabu_search<move_manager_t>::search()
 		{
 		  aspiration_criteria_met = 
 		    aspiration_criteria_m(base_t::working_solution_m, 
-					  **movit, 
-					  *this);
+					  **movit);
 		}
 	      
 	      if(!is_tabu || aspiration_criteria_met)
@@ -403,31 +438,18 @@ void mets::tabu_search<move_manager_t>::search()
       // call listener
       base_t::step_m = base_t::MOVE_MADE;
       this->notify();
-      
-      // check weather this is the best ever
-      if(best_move_cost < base_t::best_solution_m.cost_function() - epsilon)
+
+      aspiration_criteria_m.accept(base_t::working_solution_m, **best_movit);
+
+      if(base_t::solution_recorder_m.accept(base_t::working_solution_m))
 	{
-	  // best_cost_m = best_move_cost;
-	  base_t::best_solution_m = base_t::working_solution_m;
 	  base_t::step_m = base_t::IMPROVEMENT_MADE;
 	  this->notify();
 	}
-      
+
     } // end while(!termination)
 }
 
-
-template<typename search_t>
-bool 
-mets::aspiration_criteria_chain<search_t>::operator()(feasible_solution& fs, 
-						      move& mov,
-						      search_t& ts)
-{
-  if(next_m)
-    return next_m->operator()(fs, mov, ts);
-  else
-    return false;
-}
 
 
 #endif

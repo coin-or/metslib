@@ -3,7 +3,6 @@ dnl Initialization macros.
 dnl --------------------------------
 
 AC_INIT([metslib], [0.4.4], [mirko.maischberger@gmail.com])
-AC_CONFIG_HEADERS([metslib/config.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([config])
 
@@ -70,6 +69,9 @@ AC_SUBST(GENERIC_VERSION)
 VERSION=$GENERIC_VERSION
 
 AM_INIT_AUTOMAKE($PACKAGE, $VERSION, [mirko.maischberger@gmail.com])
+
+AC_CONFIG_HEADERS([config.h])
+AX_PREFIX_CONFIG_H([metslib/metslib_ah.hh])
 
 dnl -----------------------------------------------
 dnl Checks for programs.

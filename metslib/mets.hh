@@ -21,19 +21,22 @@
 /// 
 /// @section Introduction
 ///
-/// This is a library implementing some single point (not population
-/// based) metaheuristics with or without memory.
+/// This is a library implementing some neighborhood based
+/// metaheuristics with or without memory.
 ///
 /// The solution instance must implement mets::feasible_solution and
 /// the moves must be implemented as mets::move classes.
 ///
-/// The neighborhood can be specified implementing a mets::move_manager
+/// The neighborhood can be specified implementing a
+/// mets::move_manager subclass or providing another class with the
+/// same concept (using the move_manager can ease things, but you can
+/// also provide your own custom neighorhood iterator).
 ///
 /// All the mentioned classes must be implemented to model the problem
 /// at hand.  See as an example the "tutorial" and "qap" programs.
 ///
-/// You are also responsible of configuring and running the correct
-/// algorithm.
+/// You are also responsible of configuring and running the algorithm
+/// of choice.
 ///
 /// Once your model is set up you are free of experimenting different
 /// metaheuristics without changing it, but simply configuring one
@@ -42,7 +45,8 @@
 /// Each algorithm can be customized implementing your own decorating
 /// classes, although a bunch of predefined and commonly used
 /// decorators are provided with the library, some problems may need
-/// customary tabu lists, termination criterias and cooling schedules.
+/// customary tabu lists, termination criterias, aspiration criteria,
+/// or cooling schedules.
 /// 
 /// The framework you must implement your model into is made of:
 ///
@@ -51,37 +55,35 @@
 /// - mets::move
 ///   - mets::mana_move
 ///   - mets::swap_elements
-/// - mets::move_manager
-///   - mets::swap_neighborhood
 ///
 /// The toolkit of implemented algorithms is made of:
 ///
+/// - mets::move_manager (or a class implementing the same concept)
+///   - mets::swap_neighborhood
 /// - mets::local_search
-///   - mets::move_manager
 /// - mets::simulated_annealing
-///   - mets::move_manager
 ///   - mets::abstract_cooling_schedule
 ///   - mets::termination_criteria_chain
 ///   - mets::noimprove_termination_criteria
 ///   - mets::threshold_termination_criteria
 /// - mets::tabu_search
-///   - mets::move_manager
 ///   - mets::tabu_list_chain
-///   - mets::simple_tabu_list
+///     - mets::simple_tabu_list
 ///   - mets::aspiration_criteria_chain
-///   - mets::best_ever_criteria
+///     - mets::best_ever_criteria
 ///   - mets::termination_criteria_chain
-///   - mets::noimprove_termination_criteria
-///   - mets::threshold_termination_criteria
+///     - mets::iteration_termination_criteria
+///     - mets::noimprove_termination_criteria
+///     - mets::threshold_termination_criteria
 ///
 /// To use the mets::simple_tabu_list you need to derive your moves
-/// from the mets::mana_move base class and implement its pure virtual 
+/// from the mets::mana_move base class and implement the pure virtual
 /// methods.
 ///
-#ifndef METSLIB_H_
-#define METSLIB_H_
+#ifndef METS_METS_HH_
+#define METS_METS_HH_
 
-#include "metslib_config.h"
+#include "metslib_config.hh"
 
 #include <list>
 #include <cmath>
@@ -94,10 +96,10 @@
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
-#if defined (HAVE_UNORDERED_MAP)
+#if defined (METSLIB_HAVE_UNORDERED_MAP)
 #  include <unordered_map>
 #  include <random>
-#elif defined (HAVE_TR1_UNORDERED_MAP)
+#elif defined (METSLIB_HAVE_TR1_UNORDERED_MAP)
 #  include <tr1/unordered_map>
 #  include <tr1/random>
 #else
@@ -106,7 +108,7 @@
 
 static const double epsilon = 1e-7;
 
-#include "observer.h"
+#include "observer.hh"
 #include "model.hh"
 #include "termination-criteria.hh"
 #include "abstract-search.hh"
@@ -115,67 +117,14 @@ static const double epsilon = 1e-7;
 #include "simulated-annealing.hh"
 
 ///
-/// @brief Metaheuristic library namespace.
+/// @brief METSlib Metaheuristic framework namespace.
 ///
-/// Framework for single point metaheuristics (Tabu Search, Simulated
-/// Annealing, Iterated Local Search, Random Restart Local Search).
+/// Framework for neighborhood based metaheuristics (Tabu Search,
+/// Simulated Annealing, Iterated Local Search, Random Restart Local
+/// Search).
 ///
 namespace mets { } 
 
-/// @brief Operator<< for moves.
-std::ostream& operator<<(std::ostream& os, const mets::move& mov);
+std::ostream& operator<<(std::ostream& os, const mets::printable& p);
 
-/*
-//________________________________________________________________________
-template<typename random_generator>
-mets::swap_neighborhood< random_generator
-			 >::swap_neighborhood(random_generator& r, 
-					      unsigned int moves)
-  : mets::move_manager(), rng(r), int_range(0), n(moves)
-{ 
-  // n simple moves
-  for(unsigned int ii = 0; ii != n; ++ii) 
-    moves_m.push_back(new swap_elements(0,0));
-}  
-
-template<typename random_generator>
-mets::swap_neighborhood<random_generator>::~swap_neighborhood()
-{
-  // delete all moves
-  for(iterator ii = begin(); ii != end(); ++ii)
-    delete (*ii);
-}
-
-template<typename random_generator>
-void
-mets::swap_neighborhood<random_generator>::refresh(mets::feasible_solution& s)
-{
-  permutation_problem& sol = dynamic_cast<permutation_problem&>(s);
-  iterator ii = begin();
-  
-  // the first n are simple qap_moveS
-  for(unsigned int cnt = 0; cnt != n; ++cnt)
-    {
-      swap_elements* m = static_cast<swap_elements*>(*ii);
-      randomize_move(*m, sol.size());
-      ++ii;
-    }
-  
-}
-
-template<typename random_generator>
-void
-mets::swap_neighborhood<random_generator
-			>::randomize_move(swap_elements& m, unsigned int size)
-{
-  int p1 = int_range(rng, size);
-  int p2 = int_range(rng, size);
-  while(p1 == p2) 
-    p2 = int_range(rng, size);
-  // we are friend, so we know how to handle the nuts&bolts of
-  // swap_elements
-  m.p1 = std::min(p1,p2); 
-  m.p2 = std::max(p1,p2); 
-}
-*/
 #endif

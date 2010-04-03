@@ -1,14 +1,14 @@
 // tabu list regression
-#include "../metslib/mets.h"
+#include "../metslib/mets.hh"
 
 using namespace std;
 
-class my_sol : public mets::feasible_solution
+class my_sol : public mets::copyable_solution
 {
   mets::gol_type cost_function() const
-  { return 0; }
+  { return 0.0; }
 
-  void copy_from(const mets::feasible_solution&) 
+  void copy_from(const mets::copyable&) 
   { }
 };
 

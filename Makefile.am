@@ -12,8 +12,7 @@ pkgconfig_DATA = metslib.pc
 
 EXTRA_DIST = autogen.sh
 
-ConfigHeader = metslib_config.h
-
+ConfigHeader = metslib_config.hh
 install-exec-local:
 	echo "#ifndef HAVE_CONFIG_H" >bla
 	echo "#define HAVE_CONFIG_H" >>bla

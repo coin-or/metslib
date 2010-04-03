@@ -47,7 +47,7 @@ namespace mets {
     /// @param short_circuit Wether the search should stop on
     /// the first improving move or not.
     local_search(feasible_solution& starting_point,
-		 feasible_solution& best_so_far,
+		 solution_recorder& recorder,
 		 move_manager_type& moveman,
 		 bool short_circuit = false);
 
@@ -71,46 +71,14 @@ namespace mets {
 
   /// @}
   
-  /// @defgroup simulated_annealing Simulated Annealing
-  /// @{
-
-  /// @brief Cooling criteria (for Simulated Annealing).
-  ///
-  /// @see mets::simulated_annealing
-  ///
-  /// An abstract annealing schedule. Implementations
-  /// should decide the new temperature every time the 
-  /// subscript operator is called (every search iteration)
-  template<typename search_type>
-  class abstract_cooling_schedule
-  {
-  public:
-    /// @brief Constructor
-    abstract_cooling_schedule() 
-    { }
-
-    /// @brief Virtual destructor
-    virtual
-    ~abstract_cooling_schedule() 
-    { }
-
-    /// @brief The function that updates the SA temperature.
-    ///
-    /// @param temp The actual annealing temperature.
-    /// @param fs The current working solution.
-    /// @param as The search instance.
-    /// @return The new scheduled temperature.
-    virtual double
-    operator()(double temp, feasible_solution& fs, search_type& as) = 0;
-  };
 }
 
 template<typename move_manager_t>
 mets::local_search<move_manager_t>::local_search(feasible_solution& working,
-						 feasible_solution& best_so_far,
+						 solution_recorder& recorder,
 						 move_manager_t& moveman,
 						 bool short_circuit)
-  : abstract_search<move_manager_t>(working, best_so_far, moveman),
+  : abstract_search<move_manager_t>(working, recorder, moveman),
     short_circuit_m(short_circuit)
 { 
   typedef abstract_search<move_manager_t> base_t;

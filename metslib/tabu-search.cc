@@ -16,7 +16,7 @@
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-#include "mets.h"
+#include "mets.hh"
 
 // chain of responsibility
 
@@ -28,7 +28,7 @@ mets::tabu_list_chain::tabu(feasible_solution& sol, /* const */ move& mov)
 }
 
 bool
-mets::tabu_list_chain::is_tabu(feasible_solution& sol, /* const */ move& mov)
+mets::tabu_list_chain::is_tabu(feasible_solution& sol, /* const */ move& mov) const
 {
   if(next_m) 
     return next_m->is_tabu(sol, mov);
@@ -51,8 +51,8 @@ mets::simple_tabu_list::tabu(feasible_solution& sol, /* const */ move& mov)
 
   // This does nothing if the move was already tabu (can happen when
   // aspiration criteria is met).
-  pair<move_map_type::iterator, bool> 
-    insert_result = tabu_hash_m.insert(make_pair(mc, 1));
+  std::pair<move_map_type::iterator, bool> 
+    insert_result = tabu_hash_m.insert(std::make_pair(mc, 1));
 
   // If it was already in the map, increase the counter
   if(!insert_result.second) 
@@ -88,7 +88,7 @@ mets::simple_tabu_list::tabu(feasible_solution& sol, /* const */ move& mov)
 }
 
 bool
-mets::simple_tabu_list::is_tabu(feasible_solution& sol, move& mov)
+mets::simple_tabu_list::is_tabu(feasible_solution& sol, move& mov) const
 {
   // hash set. very fast but requires C++ ISO TR1 extension
   // and an hash function in every move (Omega(1)).
@@ -99,4 +99,67 @@ mets::simple_tabu_list::is_tabu(feasible_solution& sol, move& mov)
     return true;
 
   return tabu_list_chain::is_tabu(sol, mov);
+}
+
+//////////////////////////////////////////////////////////////////////////
+// aspiration_criteria_chain
+void 
+mets::aspiration_criteria_chain::reset()
+{
+  if(next_m)
+    return next_m->reset();
+}
+
+void 
+mets::aspiration_criteria_chain::accept(feasible_solution& fs, 
+					move& mov)
+{
+  if(next_m) next_m->accept(fs, mov);
+}
+
+bool 
+mets::aspiration_criteria_chain::operator()(feasible_solution& fs, 
+					    move& mov) const
+{
+  if(next_m)
+    return next_m->operator()(fs, mov);
+  else
+    return false;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// best_ever_criteria
+mets::best_ever_criteria::best_ever_criteria(double tolerance) 
+  : aspiration_criteria_chain(),
+    best_m(std::numeric_limits<gol_type>::max()),
+    tolerance_m(tolerance)
+{ }
+
+mets::best_ever_criteria::best_ever_criteria(aspiration_criteria_chain* next, double tolerance) 
+  : aspiration_criteria_chain(next),
+    best_m(std::numeric_limits<gol_type>::max()),
+    tolerance_m(tolerance)
+{ }
+    
+void mets::best_ever_criteria::reset()
+{
+  best_m = std::numeric_limits<mets::gol_type>::max();
+  aspiration_criteria_chain::reset();
+}
+
+void
+mets::best_ever_criteria::accept(feasible_solution& fs, move& mov) 
+{
+  best_m = std::min(fs.cost_function(), best_m);
+  aspiration_criteria_chain::accept(fs, mov);
+}  
+
+bool 
+mets::best_ever_criteria::operator()(feasible_solution& fs, move& mov) const
+{ 
+  /// the solution is the solution before applying mov.
+  if(mov.evaluate(fs) < best_m - tolerance_m)
+    return true;
+  else
+    return aspiration_criteria_chain::operator()(fs, mov); 
 }

@@ -1,7 +1,56 @@
-#ifndef SIMULATED_ANNEALING_HH_
-#define SIMULATED_ANNEALING_HH_
+// METSlib source file - simulated-annealing.hh                  -*- C++ -*-
+//
+// Copyright (C) 2006-2010 Mirko Maischberger <mirko.maischberger@gmail.com>
+//
+//    This program is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//   You should have received a copy of the GNU General Public License
+//   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+#ifndef METS_SIMULATED_ANNEALING_HH_
+#define METS_SIMULATED_ANNEALING_HH_
 
 namespace mets {
+
+  /// @defgroup simulated_annealing Simulated Annealing
+  /// @{
+
+  /// @brief Cooling criteria (for Simulated Annealing).
+  ///
+  /// @see mets::simulated_annealing
+  ///
+  /// An abstract annealing schedule. Implementations
+  /// should decide the new temperature every time the 
+  /// subscript operator is called (every search iteration)
+  class abstract_cooling_schedule
+  {
+  public:
+    /// @brief Constructor
+    abstract_cooling_schedule() 
+    { }
+
+    /// @brief Virtual destructor
+    virtual
+    ~abstract_cooling_schedule() 
+    { }
+
+    /// @brief The function that updates the SA temperature.
+    ///
+    /// @param temp The actual annealing temperature.
+    /// @param fs The current working solution.
+    /// @return The new scheduled temperature.
+    virtual double
+    operator()(double temp, feasible_solution& fs) = 0;
+  };
+
   /// @brief Search by Simulated Annealing.
   template<typename move_manager_type>
   class simulated_annealing : public mets::abstract_search<move_manager_type>
@@ -28,10 +77,10 @@ namespace mets {
     ///
     /// @param starting_temp The starting SA temperature.
     simulated_annealing(feasible_solution& starting_point,
-			feasible_solution& best_so_far,
+			solution_recorder& recorder,
 			move_manager_type& moveman,
-			termination_criteria_chain<search_type>& tc,
-			abstract_cooling_schedule<search_type>& cs,
+			termination_criteria_chain& tc,
+			abstract_cooling_schedule& cs,
 			double starting_temp,
 			double K = 1.0);
     
@@ -58,19 +107,17 @@ namespace mets {
     /// @brief The annealing schedule instance.
     ///
     /// @return The cooling schedule used by this search process.
-    const abstract_cooling_schedule<simulated_annealing<move_manager_type> >& 
+    const abstract_cooling_schedule& 
     cooling_schedule() const
     { return cooling_schedule_m; }
 
   protected:
-    termination_criteria_chain<simulated_annealing<move_manager_type> 
-			       >& termination_criteria_m;
-    abstract_cooling_schedule<simulated_annealing<move_manager_type> 
-			      >& cooling_schedule_m;
+    termination_criteria_chain& termination_criteria_m;
+    abstract_cooling_schedule& cooling_schedule_m;
     double starting_temp_m;
     double current_temp_m;
     double K_m;
-#if defined (HAVE_UNORDERED_MAP) && !defined (TR1_MIXED_NAMESPACE)
+#if defined (METSLIB_HAVE_UNORDERED_MAP) && !defined (METSLIB_TR1_MIXED_NAMESPACE)
     std::uniform_real<> ureal;
     std::mt19937 rng;
     std::variate_generator< std::mt19937, std::uniform_real<> > gen;
@@ -85,11 +132,11 @@ namespace mets {
   /// @brief Original ECS proposed by Kirkpatrick
   template<typename search_type>
   class exponential_cooling
-    : public abstract_cooling_schedule<search_type>
+    : public abstract_cooling_schedule
   {
   public:
     exponential_cooling(double alpha = 0.95)
-      : abstract_cooling_schedule<search_type>(), factor_m(alpha) 
+      : abstract_cooling_schedule(), factor_m(alpha) 
     { if(alpha >= 1) throw std::runtime_error("alpha must be < 1"); }
     double
     operator()(double temp, feasible_solution& fs, search_type& ts)
@@ -101,14 +148,14 @@ namespace mets {
   /// @brief Alternative LCS proposed by Randelman and Grest
   template<typename search_type>
   class linear_cooling
-    : public abstract_cooling_schedule<search_type>
+    : public abstract_cooling_schedule
   {
   public:
     linear_cooling(double delta = 0.1)
-      : abstract_cooling_schedule<search_type>(), decrement_m(delta)
+      : abstract_cooling_schedule(), decrement_m(delta)
     { if(delta <= 0) throw std::runtime_error("delta must be > 0"); }
     double
-    operator()(double temp, feasible_solution& fs, search_type& ts)
+    operator()(double temp, feasible_solution& fs)
     { return std::max(0.0, temp-decrement_m); }
   protected:
     double decrement_m;
@@ -120,13 +167,13 @@ namespace mets {
 template<typename move_manager_t>
 mets::simulated_annealing<move_manager_t>::
 simulated_annealing(feasible_solution& working,
-		    feasible_solution& best_so_far,
+		    solution_recorder& recorder,
 		    move_manager_t& moveman,
-		    termination_criteria_chain<search_type>& tc,
-		    abstract_cooling_schedule<search_type>& cs,
+		    termination_criteria_chain& tc,
+		    abstract_cooling_schedule& cs,
 		    double starting_temp, 
 		    double K)
-  : abstract_search<move_manager_t>(working, best_so_far, moveman),
+  : abstract_search<move_manager_t>(working, recorder, moveman),
     termination_criteria_m(tc), cooling_schedule_m(cs),
     starting_temp_m(starting_temp), current_temp_m(), K_m(K),
     ureal(0.0,1.0), rng(), gen(rng, ureal)

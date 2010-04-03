@@ -15,13 +15,12 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <cassert>
-#include "mets.h"
+#include "mets.hh"
 
 //________________________________________________________________________
-std::ostream& operator<<(std::ostream& os, const mets::move& mov)
+std::ostream& operator<<(std::ostream& os, const mets::printable& p)
 {
-  mov.print(os);
+  p.print(os);
   return os;
 }
 

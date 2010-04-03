@@ -1,9 +1,9 @@
 #include <iostream>
-#include "../metslib/mets.h"
+#include "../metslib/mets.hh"
 
 using namespace std;
 
-#if 1
+#if 0
 int main() {std::cerr << "This has to be implemented!" << std::endl; return 1;}
 #else
 class p : public mets::permutation_problem
@@ -20,6 +20,8 @@ public:
 
   mets::gol_type cost_function() const;
 
+  mets::gol_type compute_cost() const  { return 0.0; }
+  mets::gol_type evaluate_swap(int i, int j) const { return 0.0; }
   friend int main();
 };
 
