@@ -228,8 +228,10 @@ namespace mets {
     search() 
       throw(no_moves_error);
     
-    /// We just followed an aspiration criteria
-    static const int ASPIRATION_CRITERIA_MET = 2;
+    enum {
+      ASPIRATION_CRITERIA_MET = abstract_search<move_manager_type>::LAST,
+      LAST
+    };
 
     /// @brief The tabu list used by this tabu search
     const tabu_list_chain& 
@@ -382,6 +384,10 @@ void mets::tabu_search<move_manager_t>::search()
   typedef abstract_search<move_manager_t> base_t;
   while(!termination_criteria_m(base_t::working_solution_m))
     {
+      // call listeners
+      base_t::step_m = base_t::ITERATION_BEGIN;
+      this->notify();
+
       base_t::moves_m.refresh(base_t::working_solution_m);
       
       typename move_manager_t::iterator best_movit = base_t::moves_m.end(); 
@@ -400,7 +406,7 @@ void mets::tabu_search<move_manager_t>::search()
 	  // for each non-tabu move record the best one
 	  if(cost < best_move_cost)
 	    {
-
+	      
 	      bool aspiration_criteria_met = false;
 	      
 	      // not interesting if this is not a tabu move (and if we
@@ -434,19 +440,23 @@ void mets::tabu_search<move_manager_t>::search()
       // do the best non tabu move (unless overridden by aspiration
       // criteria, of course)
       (*best_movit)->apply(base_t::working_solution_m);
-      
-      // call listener
+
+      // call listeners
       base_t::step_m = base_t::MOVE_MADE;
       this->notify();
-
+      
       aspiration_criteria_m.accept(base_t::working_solution_m, **best_movit);
-
+      
       if(base_t::solution_recorder_m.accept(base_t::working_solution_m))
 	{
 	  base_t::step_m = base_t::IMPROVEMENT_MADE;
 	  this->notify();
 	}
 
+      // call listeners
+      base_t::step_m = base_t::ITERATION_END;
+      this->notify();
+      
     } // end while(!termination)
 }
 

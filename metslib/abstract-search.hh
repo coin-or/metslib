@@ -76,11 +76,19 @@ namespace mets {
     ~abstract_search() 
     { };
 
-    /// @brief We just made a move.
-    static const int MOVE_MADE = 0;
-    /// @brief Our solution_recorder_chain object reported an improvement
-    static const int IMPROVEMENT_MADE = 0;
-
+    enum {
+      /// @brief We just made a move.
+      MOVE_MADE = 0,  
+      /// @brief Our solution_recorder_chain object reported an improvement
+      IMPROVEMENT_MADE,
+      /// @brief We are about to start a new iteration
+      ITERATION_BEGIN,
+      /// @brief We have done the iteration
+      ITERATION_END,
+      /// @brief Placeholer for next values
+      LAST
+    };
+     
     /// @brief This method starts the search.
     /// 
     /// Remember that this is a minimization.
@@ -93,9 +101,9 @@ namespace mets {
 
     /// @brief The solution recorder instance.
     const solution_recorder&
-    get_solution_recorder() const 
+    recorder() const 
     { return solution_recorder_m; };
-
+    
     /// @brief The current working solution.
     const feasible_solution&
     working() const 
