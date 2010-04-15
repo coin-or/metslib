@@ -34,6 +34,9 @@ namespace mets {
     ///
     virtual bool 
     accept(feasible_solution& sol) = 0;
+
+    virtual gol_type 
+    best_cost() const = 0;
   };
 
   /// @brief An abstract search.
@@ -183,6 +186,8 @@ namespace mets {
     const copyable_solution& best_ever() const 
     { return best_ever_m; }
 
+    gol_type best_cost() const 
+    { return best_ever_m.cost_function(); }
   protected:
     /// @brief Records the best solution
     copyable_solution& best_ever_m;

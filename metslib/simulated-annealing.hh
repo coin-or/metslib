@@ -130,7 +130,6 @@ namespace mets {
   };
     
   /// @brief Original ECS proposed by Kirkpatrick
-  template<typename search_type>
   class exponential_cooling
     : public abstract_cooling_schedule
   {
@@ -139,14 +138,13 @@ namespace mets {
       : abstract_cooling_schedule(), factor_m(alpha) 
     { if(alpha >= 1) throw std::runtime_error("alpha must be < 1"); }
     double
-    operator()(double temp, feasible_solution& fs, search_type& ts)
+    operator()(double temp, feasible_solution& fs)
     { return temp*factor_m; }
   protected:
     double factor_m;
   };
 
   /// @brief Alternative LCS proposed by Randelman and Grest
-  template<typename search_type>
   class linear_cooling
     : public abstract_cooling_schedule
   {
@@ -187,15 +185,14 @@ mets::simulated_annealing<move_manager_t>::search()
 {
   typedef abstract_search<move_manager_t> base_t;
 
-  typename move_manager::iterator movit;
   current_temp_m = starting_temp_m;
-  while(!termination_criteria_m(base_t::working_solution_m, *this) 
-        && current_temp_m >= 0.0)
+  while(!termination_criteria_m(base_t::working_solution_m) 
+        && current_temp_m > 0.0)
     {
       gol_type actual_cost = base_t::working_solution_m.cost_function();
-      gol_type best_cost = base_t::best_solution_m.cost_function();
+      gol_type best_cost = base_t::solution_recorder_m.best_cost();
       base_t::moves_m.refresh(base_t::working_solution_m);
-      for(movit = base_t::moves_m.begin(); 
+      for(typename move_manager_t::iterator movit = base_t::moves_m.begin(); 
 	  movit != base_t::moves_m.end(); ++movit)
 	{
 	  // apply move and record proposed cost function
@@ -207,11 +204,10 @@ mets::simulated_annealing<move_manager_t>::search()
 	      // accepted: apply, record, lower temperature
 	      (*movit)->apply(base_t::working_solution_m);
 	      base_t::current_move_m = movit;
-	      if(cost < best_cost - epsilon)
+
+	      if(base_t::solution_recorder_m.accept(base_t::working_solution_m))
 		{
-		  best_cost = cost;
 		  base_t::step_m = base_t::IMPROVEMENT_MADE;
-		  base_t::best_solution_m = base_t::working_solution_m;
 		  this->notify();
 		}
 	      base_t::step_m = base_t::MOVE_MADE;
@@ -221,8 +217,7 @@ mets::simulated_annealing<move_manager_t>::search()
 	} // end for each move
       
       current_temp_m = 
-	cooling_schedule_m(current_temp_m, base_t::working_solution_m, *this);
-      
+	cooling_schedule_m(current_temp_m, base_t::working_solution_m);
     }
 }
 #endif
