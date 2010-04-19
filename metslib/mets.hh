@@ -106,7 +106,17 @@
 #  error "Unable to find unordered_map header file. Please use a recent C++ compiler supporting TR1 extension."
 #endif
 
-static const double epsilon = 1e-7;
+
+///
+/// @brief METSlib Metaheuristic framework namespace.
+///
+/// Framework for neighborhood based metaheuristics (Tabu Search,
+/// Simulated Annealing, Iterated Local Search, Random Restart Local
+/// Search).
+///
+namespace mets {
+  static const double epsilon = 1e-7;
+}
 
 #include "observer.hh"
 #include "model.hh"
@@ -116,14 +126,6 @@ static const double epsilon = 1e-7;
 #include "tabu-search.hh"
 #include "simulated-annealing.hh"
 
-///
-/// @brief METSlib Metaheuristic framework namespace.
-///
-/// Framework for neighborhood based metaheuristics (Tabu Search,
-/// Simulated Annealing, Iterated Local Search, Random Restart Local
-/// Search).
-///
-namespace mets { } 
 
 std::ostream& operator<<(std::ostream& os, const mets::printable& p);
 

@@ -124,6 +124,7 @@ namespace mets {
 	resets_m(0),
 	second_guess_m(0)
     {}
+
     noimprove_termination_criteria
     (termination_criteria_chain* next, int max) 
       : termination_criteria_chain(next),

@@ -47,12 +47,14 @@ mets::noimprove_termination_criteria::operator()(feasible_solution& fs)
       iterations_left_m = max_noimprove_m;
       resets_m++;
     }
+  
+
+  if(iterations_left_m <= 0)
+    return true;
 
   total_iterations_m++;
-
-  if(--iterations_left_m <= 0)
-      return true;
-
+  --iterations_left_m;
+  
   return termination_criteria_chain::operator()(fs);
 }
 

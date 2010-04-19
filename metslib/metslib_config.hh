@@ -1,7 +1,11 @@
 #ifndef METSLIB_CONFIG_HH_
 #define METSLIB_CONFIG_HH_
 #ifdef HAVE_CONFIG_H
-#  include "metslib_ah.hh"
+#  ifndef METSLIB_TESTING
+#    include "metslib_ah.hh"
+#else
+#    include "metslib-config.h"
+#  endif
 #else
 #  if defined (WIN32)
 #    define METSLIB_HAVE_UNORDERED_MAP 1

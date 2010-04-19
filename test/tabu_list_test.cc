@@ -1,5 +1,5 @@
 // tabu list regression
-#include "../metslib/mets.hh"
+#include <metslib/mets.hh>
 
 using namespace std;
 

@@ -401,8 +401,8 @@ void mets::tabu_search<move_manager_t>::search()
 	  
 	  // save tabu status
 	  bool is_tabu = tabu_list_m.is_tabu(base_t::working_solution_m, 
-					     **movit);
-	  
+						 **movit);
+
 	  // for each non-tabu move record the best one
 	  if(cost < best_move_cost)
 	    {

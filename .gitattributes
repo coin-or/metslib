@@ -44,3 +44,4 @@ metslib/termination-criteria.hh -text
 test/Makefile.am -text
 test/permutation_problem_test.cc -text
 test/tabu_list_test.cc -text
+test/termination_test.cc -text
