@@ -14,6 +14,10 @@
 //
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+// This program can be distributed, at your option, under the terms of
+// the CPL 1.0 as published by the Open Source Initiative
+// http://www.opensource.org/licenses/cpl1.0.php
 
 #ifndef METS_MODEL_HH_
 #define METS_MODEL_HH_

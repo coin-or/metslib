@@ -1,3 +1,8 @@
+//
+// This program can be distributed, at your option, under the terms of
+// the CPL 1.0 as published by the Open Source Initiative
+// http://www.opensource.org/licenses/cpl1.0.php
+
 #ifndef METS_ABSTRACT_SEARCH_HH_
 #define METS_ABSTRACT_SEARCH_HH_
 

@@ -1,6 +1,7 @@
 * text=auto !eol
 /AUTHORS -text
 /COPYING -text
+/COPYING-CPL -text
 /ChangeLog -text
 /INSTALL -text
 /Makefile.am -text
