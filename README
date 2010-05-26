@@ -16,7 +16,7 @@ Once the model is implemented one can test some Tabu Search Strategies
 or Simulated Annealing or other local search based search strategies.
 
 METSlib is Open Source and is covered by the GNU GPL license or, at
-your opinion, by the Common Public License 1.0. Commercial licensing
+your option, by the Common Public License 1.0. Commercial licensing
 or custom development can be considered by the author upon request.
 
 METSlib implements the basics of some metaheuristics algorithm:
