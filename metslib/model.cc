@@ -30,6 +30,7 @@ mets::permutation_problem::copy_from(const mets::copyable& other)
   const mets::permutation_problem& o = 
     dynamic_cast<const mets::permutation_problem&>(other);
   pi_m = o.pi_m;
+  cost_m = o.cost_m;
 }
 
 //________________________________________________________________________

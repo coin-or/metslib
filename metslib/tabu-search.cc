@@ -154,7 +154,7 @@ void mets::best_ever_criteria::reset()
 void
 mets::best_ever_criteria::accept(feasible_solution& fs, move& mov) 
 {
-  best_m = std::min(fs.cost_function(), best_m);
+  best_m = std::min(dynamic_cast<const evaluable_solution&>(fs).cost_function(), best_m);
   aspiration_criteria_chain::accept(fs, mov);
 }  
 

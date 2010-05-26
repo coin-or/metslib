@@ -112,6 +112,12 @@ namespace mets {
   /// objective function should probably account for unfeasibility
   /// with a penalty term.
   ///
+  /// This is the most generic solution type and is useful only if you
+  /// implement your own solution recorder and
+  /// max-noimprove. Otherwise you might want to derive from an
+  /// evaluable_solution or from a permutation_problem class,
+  /// depending on your problem type.
+  ///
   class feasible_solution
   {
   public:
@@ -120,6 +126,14 @@ namespace mets {
     ~feasible_solution() 
     { }
 
+  };
+
+
+  /// @brief A copyable and evaluable solution implementation,
+  class evaluable_solution : public feasible_solution, 
+			     public copyable
+  { 
+  public:
     /// @brief Cost function to be minimized.
     ///
     /// The cost function is the target that the search algorithm
@@ -129,12 +143,6 @@ namespace mets {
     ///
     virtual gol_type 
     cost_function() const = 0;
-  };
-
-
-  class copyable_solution : public feasible_solution, 
-			    public copyable 
-  { 
   };
 
   /// @brief An abstract permutation problem.
@@ -148,11 +156,8 @@ namespace mets {
   /// perturbate a solution with some random swaps and to simply swap
   /// two items in the list.
   ///
-  /// You still need to provide your own
-  /// mets::feasible_solution::cost_function() implementation.
-  ///
   /// @see mets::swap_elements
-  class permutation_problem: public copyable_solution 
+  class permutation_problem: public evaluable_solution 
   {
   public:
     
@@ -160,7 +165,7 @@ namespace mets {
     permutation_problem(); 
 
     /// @brief Inizialize pi_m = {0, 1, 2, ..., n-1}.
-    permutation_problem(int n) : pi_m(n), cost_m()
+    permutation_problem(int n) : pi_m(n), cost_m(0.0)
     { std::generate(pi_m.begin(), pi_m.end(), sequence(0)); }
 
     /// @brief Copy from another permutation problem, if you introduce
@@ -184,10 +189,6 @@ namespace mets {
     update_cost() 
     { cost_m = compute_cost(); }
     
-    /// @brief: Compute cost of the whole solution.
-    ///
-    virtual gol_type
-    compute_cost() const = 0;
     
     /// @brief: Evaluate a swap.
     ///
@@ -201,9 +202,12 @@ namespace mets {
     ///
     void
     apply_swap(int i, int j)
-    { cost_m = evaluate_swap(i,j); std::swap(pi_m[i], pi_m[j]); }
+    { cost_m += evaluate_swap(i,j); std::swap(pi_m[i], pi_m[j]); }
     
   protected:
+    /// @brief: Compute cost of the whole solution.
+    virtual gol_type
+    compute_cost() const = 0;
     std::vector<int> pi_m;
     gol_type cost_m;
     template<typename random_generator> 
@@ -328,7 +332,7 @@ namespace mets {
     
   };
 
-  template<typename rngden> class swap_neighborhood; // fw decl
+  template<typename rndgen> class swap_neighborhood; // fw decl
 
   /// @brief A mets::mana_move that swaps two elements in a
   /// mets::permutation_problem.
@@ -533,10 +537,61 @@ namespace mets {
     std::tr1::uniform_int<> int_range;
 #endif
     unsigned int n;
-    unsigned int nc;
 
     void randomize_move(swap_elements& m, unsigned int size);
   };
+
+  //________________________________________________________________________
+  template<typename random_generator>
+  mets::swap_neighborhood< random_generator
+			   >::swap_neighborhood(random_generator& r, 
+						unsigned int moves)
+			     : mets::move_manager(), rng(r), int_range(0), n(moves)
+  { 
+    // n simple moves
+    for(unsigned int ii = 0; ii != n; ++ii) 
+      moves_m.push_back(new swap_elements(0,0));
+  }  
+  
+  template<typename random_generator>
+  mets::swap_neighborhood<random_generator>::~swap_neighborhood()
+  {
+    // delete all moves
+    for(iterator ii = begin(); ii != end(); ++ii)
+      delete (*ii);
+  }
+
+  template<typename random_generator>
+  void
+  mets::swap_neighborhood<random_generator>::refresh(mets::feasible_solution& s)
+  {
+    permutation_problem& sol = dynamic_cast<permutation_problem&>(s);
+    iterator ii = begin();
+    
+    // the first n are simple qap_moveS
+    for(unsigned int cnt = 0; cnt != n; ++cnt)
+      {
+	swap_elements* m = static_cast<swap_elements*>(*ii);
+	randomize_move(*m, sol.size());
+	++ii;
+      }
+    
+  }
+  
+  template<typename random_generator>
+  void
+  mets::swap_neighborhood<random_generator
+			  >::randomize_move(swap_elements& m, unsigned int size)
+  {
+    int p1 = int_range(rng, size);
+    int p2 = int_range(rng, size);
+    while(p1 == p2) 
+      p2 = int_range(rng, size);
+    // we are friend, so we know how to handle the nuts&bolts of
+    // swap_elements
+    m.p1 = std::min(p1,p2); 
+    m.p2 = std::max(p1,p2); 
+  }
 
   /// @brief Generates a the full swap neighborhood.
   class swap_full_neighborhood : public mets::move_manager
@@ -565,6 +620,7 @@ namespace mets {
     void refresh(mets::feasible_solution& s) { }
     
   };
+
 
   /// @brief Generates a the full subsequence inversion neighborhood.
   class invert_full_neighborhood : public mets::move_manager

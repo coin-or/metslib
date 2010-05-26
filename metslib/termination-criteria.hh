@@ -57,7 +57,7 @@ namespace mets {
     /// @param fs The current working solution.
     /// @return True if we shoud terminate
     virtual bool 
-    operator()(feasible_solution& fs);
+    operator()(const feasible_solution& fs);
 
     /// @brief Reset the criterion to its initial state.
     ///
@@ -91,7 +91,7 @@ namespace mets {
 	iterations_m(max) {}
 
     bool 
-    operator()(feasible_solution& fs)
+    operator()(const feasible_solution& fs)
     { 
       if (iterations_m <= 0) 
 	return true; 
@@ -141,7 +141,7 @@ namespace mets {
     { }
 
     bool 
-    operator()(feasible_solution& fs);
+    operator()(const feasible_solution& fs);
     void reset() 
     { iterations_left_m = max_noimprove_m; 
       second_guess_m = total_iterations_m = resets_m = 0; 
@@ -182,9 +182,12 @@ namespace mets {
     { } 
 
     bool 
-    operator()(feasible_solution& fs)
+    operator()(const feasible_solution& fs)
     { 
-      if(fs.cost_function() <= level_m) 
+      mets::gol_type current_cost = 
+	dynamic_cast<const evaluable_solution&>(fs).cost_function();
+      
+      if(current_cost <= level_m) 
 	return true; 
       
       return termination_criteria_chain::operator()(fs); 

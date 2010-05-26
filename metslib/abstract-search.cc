@@ -25,10 +25,9 @@ mets::solution_recorder::~solution_recorder()
 { }
 
 bool
-mets::best_ever_solution::accept(mets::feasible_solution& sol)
+mets::best_ever_solution::accept(const mets::feasible_solution& sol)
 {
-  mets::copyable_solution& s = 
-    static_cast<mets::copyable_solution&>(sol);
+  const evaluable_solution& s = dynamic_cast<const mets::evaluable_solution&>(sol);
   if(s.cost_function() < best_ever_m.cost_function())
     {
       best_ever_m.copy_from(s);

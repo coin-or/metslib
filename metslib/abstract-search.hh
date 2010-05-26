@@ -38,7 +38,7 @@ namespace mets {
     /// (this is a chain of responsibility)
     ///
     virtual bool 
-    accept(feasible_solution& sol) = 0;
+    accept(const feasible_solution& sol) = 0;
 
     virtual gol_type 
     best_cost() const = 0;
@@ -171,7 +171,7 @@ namespace mets {
   class best_ever_solution : public solution_recorder 
   {
   public:
-    best_ever_solution(copyable_solution& best) : 
+    best_ever_solution(evaluable_solution& best) : 
       solution_recorder(), 
       best_ever_m(best) 
     { }
@@ -185,17 +185,17 @@ namespace mets {
 
     /// @brief Accept is called at the end of each iteration for an
     /// opportunity to record the best move ever.
-    bool accept(feasible_solution& sol);
+    bool accept(const feasible_solution& sol);
 
     /// @brief Returns the best solution found since the beginning.
-    const copyable_solution& best_ever() const 
+    const evaluable_solution& best_seen() const 
     { return best_ever_m; }
 
     gol_type best_cost() const 
     { return best_ever_m.cost_function(); }
   protected:
     /// @brief Records the best solution
-    copyable_solution& best_ever_m;
+    evaluable_solution& best_ever_m;
   };
     
   /// @brief An object that is called back during the search progress.

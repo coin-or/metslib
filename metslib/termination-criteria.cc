@@ -23,7 +23,7 @@
 
 //________________________________________________________________________
 bool 
-mets::termination_criteria_chain::operator()(feasible_solution& fs)
+mets::termination_criteria_chain::operator()(const feasible_solution& fs)
 {
   if(next_m)
     return next_m->operator()(fs);
@@ -40,9 +40,10 @@ mets::termination_criteria_chain::reset()
 
 //________________________________________________________________________
 bool 
-mets::noimprove_termination_criteria::operator()(feasible_solution& fs)
+mets::noimprove_termination_criteria::operator()(const feasible_solution& fs)
 {
-  mets::gol_type current_cost = fs.cost_function();
+  mets::gol_type current_cost = 
+    dynamic_cast<const evaluable_solution&>(fs).cost_function();
   if(current_cost < best_cost_m - epsilon)
     {
       best_cost_m = current_cost;
