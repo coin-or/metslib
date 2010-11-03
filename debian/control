@@ -1,0 +1,21 @@
+Source: metslib
+Priority: extra
+Maintainer: Mirko Maischberger <mirko.maischberger@gmail.com>
+Build-Depends: debhelper (>= 7), autotools-dev, binutils, coreutils, libc6-dev, libstdc++6, linux-libc-dev, perl-base
+Standards-Version: 3.7.3
+Section: libs
+Homepage: http://www.coin-or.org/metslib
+
+Package: metslib-dev
+Section: libdevel
+Architecture: any
+Depends: metslib (= ${binary:Version})
+Description: METSlib development files
+ METSlib development files
+
+Package: metslib
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: METSlib metaheuristics library in C++
+ METSlib is a library for Local Search, Tabu Search and Simulated Annealing.

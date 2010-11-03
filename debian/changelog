@@ -1,0 +1,6 @@
+metslib (0.4.4-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- Mirko Maischberger <mirko.maischberger@gmail.com>  Tue, 20 Oct 2009 14:53:24 +0200
+

@@ -1,0 +1,40 @@
+2009-10-20 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* debian/*: added packaging file for Debian. You can create deb
+	package for your GNU/Debian or derived distro using
+	"dpkg-buildpackage -us -uc -rfakeroot"
+
+2009-10-19 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* test/permutation_problem_test.cc: a test case for the 
+        permutation problem.
+
+2009-10-17 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* metslib/mets.h, metslib/mets.cc: added a new model framework
+	class for permutation problems (mets::permutation_problem) with
+	specific moves (mets::swap_elements) and
+	neighborhoods (mets::swap_neighnorhood,
+	mets::swap_full_neighborhood).
+
+2009-09-07 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* metslib/mets.h: replaced pure virtual operator= from
+	feasible_solution with a (less error prone) copy_from method.
+
+2009-04-04 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* *: project moved to coin-or.
+
+2007-12-23 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* metslib/mets.h, metslib/tabu-search.cc: removed dependency from
+	<ext/*> of GCC (using real tr1 now), this should now compile con
+	Visual Studio as well with few modifications. Removed old unused
+	code.
+
+2007-11-30 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* all: 0.4.1, first public release
+
+2007-11-10 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* all: 0.4.0 
+
+2007-11-10 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* all: Code cleaning
+
+2006-11-21 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* all: Initial import

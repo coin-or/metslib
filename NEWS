@@ -1,0 +1,10 @@
+* New in version 0.4.3
+
+The feasible solution has replaced the vistual operator=() with a
+safer virtual copy_from method. You should update your code to reflect
+this change.
+
+* New in version 0.4.0.
+
+Now the search listeners does receive a non-const feasible_solution to
+deal with. This should make possible reactive tabu search strategies.
