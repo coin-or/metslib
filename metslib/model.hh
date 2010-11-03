@@ -192,8 +192,11 @@ namespace mets {
 
     /// @brief: Evaluate a swap.
     ///
-    /// Implement this method to evaluate the cost function after the
-    /// swap (without actually modifying the solution).
+    /// Implement this method to evaluate the change in the cost
+    /// function after the swap (without actually modifying the
+    /// solution). The method should return the difference in cost
+    /// between the current position and the position after the swap
+    /// (negative if decreasing and positive otherwise).
     ///
     /// To obtain maximal performance from the algorithm it is
     /// essential, whenever possible, to only compute the cost update
