@@ -130,6 +130,15 @@ namespace mets {
 
 
   /// @brief A copyable and evaluable solution implementation,
+  /// 
+  /// All you need, if you implement your own mets::solution_recorder,
+  /// is to derive from the almost empty
+  /// mets::feasible_solution. However, if you want to use the
+  /// provided mets::best_ever_recorder you need to derive from this
+  /// class (that also defines an interface to copy and evaluate a
+  /// solution).
+  ///
+  /// @see mets::best_ever_recorder
   class evaluable_solution : public feasible_solution, 
 			     public copyable
   { 
@@ -175,39 +184,50 @@ namespace mets {
     /// @param other the problem to copy from
     void copy_from(const copyable& other);
 
-    /// @brief The size of the problem
+    /// @brief: Compute cost of the whole solution.
+    ///
+    /// You will need to override this one.
+    virtual gol_type
+    compute_cost() const = 0;
+
+    /// @brief: Evaluate a swap.
+    ///
+    /// Implement this method to evaluate the cost function after the
+    /// swap (without actually modifying the solution).
+    ///
+    /// To obtain maximal performance from the algorithm it is
+    /// essential, whenever possible, to only compute the cost update
+    /// and not the whole cost function.
+    virtual gol_type
+    evaluate_swap(int i, int j) const = 0;
+
+    /// @brief The size of the problem.
+    /// Do not override unless you know what you are doing.
     size_t 
     size() const
     { return pi_m.size(); }
 
-    /// @brief Returns the cost
+    /// @brief Returns the cost of the current solution. The default
+    /// implementation provided returns the protected
+    /// mets::permutation_problem::cost_m member variable. Do not
+    /// override unless you know what you are doing.
     gol_type cost_function() const 
     { return cost_m; }
 
-    /// @brief Update the cost with the one computed by the subclass.
+    /// @brief Updates the cost with the one computed by the subclass.
+    /// Do not override unless you know what you are doing.
     void
     update_cost() 
     { cost_m = compute_cost(); }
     
-    
-    /// @brief: Evaluate a swap.
-    ///
-    /// Implement this to evaluate the cost function after the swap
-    /// (withoud actually modifying the solution).
-    ///
-    virtual gol_type
-    evaluate_swap(int i, int j) const = 0;
-
-    /// @brief: Apply a swap and update cost.
-    ///
+    /// @brief: Apply a swap and update the cost.
+    /// Do not override unless you know what you are doing.
     void
     apply_swap(int i, int j)
     { cost_m += evaluate_swap(i,j); std::swap(pi_m[i], pi_m[j]); }
     
+
   protected:
-    /// @brief: Compute cost of the whole solution.
-    virtual gol_type
-    compute_cost() const = 0;
     std::vector<int> pi_m;
     gol_type cost_m;
     template<typename random_generator> 
