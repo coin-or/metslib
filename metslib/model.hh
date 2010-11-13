@@ -245,13 +245,13 @@ namespace mets {
   void random_shuffle(permutation_problem& p, random_generator& rng)
   {
 #if defined (METSLIB_HAVE_UNORDERED_MAP) && !defined (METSLIB_TR1_MIXED_NAMESPACE)
-    std::uniform_int<> unigen(0, p.pi_m.size());
-    std::variate_generator<random_generator, 
-      std::uniform_int<> >gen(rng, unigen);
+    std::uniform_int<size_t> unigen;
+    std::variate_generator<random_generator&, 
+      std::uniform_int<size_t> >gen(rng, unigen);
 #else
-    std::tr1::uniform_int<> unigen(0, p.pi_m.size());
-    std::tr1::variate_generator<random_generator, 
-      std::tr1::uniform_int<> >gen(rng, unigen);
+    std::tr1::uniform_int<size_t> unigen;
+    std::tr1::variate_generator<random_generator&, 
+      std::tr1::uniform_int<size_t> >gen(rng, unigen);
 #endif
     std::random_shuffle(p.pi_m.begin(), p.pi_m.end(), gen);
     p.update_cost();
@@ -376,7 +376,8 @@ namespace mets {
     /// @brief Virtual method that applies the move on a point
     gol_type
     evaluate(const mets::feasible_solution& s) const
-    { const permutation_problem& sol = static_cast<const permutation_problem&>(s);
+    { const permutation_problem& sol = 
+	static_cast<const permutation_problem&>(s);
       return sol.evaluate_swap(p1, p2); }
 
     /// @brief Virtual method that applies the move on a point
