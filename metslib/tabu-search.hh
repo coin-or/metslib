@@ -400,7 +400,7 @@ void mets::tabu_search<move_manager_t>::search()
       for(typename move_manager_t::iterator movit = base_t::moves_m.begin(); 
 	  movit != base_t::moves_m.end(); ++movit)
 	{
-	  // apply move and record proposed cost function
+	  // evaluate proposed move
 	  gol_type cost = (*movit)->evaluate(base_t::working_solution_m);
 	  
 	  // save tabu status
@@ -463,7 +463,5 @@ void mets::tabu_search<move_manager_t>::search()
       
     } // end while(!termination)
 }
-
-
 
 #endif

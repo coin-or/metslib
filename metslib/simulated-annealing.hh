@@ -122,11 +122,11 @@ namespace mets {
     double current_temp_m;
     double K_m;
 #if defined (METSLIB_HAVE_UNORDERED_MAP) && !defined (METSLIB_TR1_MIXED_NAMESPACE)
-    std::uniform_real<> ureal;
+    std::uniform_real<double> ureal;
     std::mt19937 rng;
-    std::variate_generator< std::mt19937, std::uniform_real<> > gen;
+    std::variate_generator< std::mt19937, std::uniform_real<double> > gen;
 #else
-    std::tr1::uniform_real<> ureal;
+    std::tr1::uniform_real<double> ureal;
     std::tr1::mt19937 rng;
     std::tr1::variate_generator< std::tr1::mt19937,
 				 std::tr1::uniform_real<double> > gen;
@@ -205,7 +205,7 @@ mets::simulated_annealing<move_manager_t>::search()
 	  double delta = ((double)(cost-actual_cost));
 	  if(delta < 0 || gen() < exp(-delta/(K_m*current_temp_m)))
 	    {
-	      // accepted: apply, record, lower temperature
+	      // accepted: apply, record, exit for and lower temperature
 	      (*movit)->apply(base_t::working_solution_m);
 	      base_t::current_move_m = movit;
 

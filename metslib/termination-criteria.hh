@@ -187,7 +187,7 @@ namespace mets {
       mets::gol_type current_cost = 
 	dynamic_cast<const evaluable_solution&>(fs).cost_function();
       
-      if(current_cost <= level_m) 
+      if(current_cost < level_m + epsilon) 
 	return true; 
       
       return termination_criteria_chain::operator()(fs); 

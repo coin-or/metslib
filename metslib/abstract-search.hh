@@ -54,8 +54,8 @@ namespace mets {
     /// @brief Set some common values needed for neighborhood based
     /// metaheuristics.
     ///
-    /// @param working The working solution (this will be modified
-    /// during search) 
+    /// @param working The starting point solution (this will be modified
+    /// during search as the working solution) 
     ///
     /// @param recorder A solution recorder instance used to record
     /// the best solution found
@@ -171,6 +171,12 @@ namespace mets {
   class best_ever_solution : public solution_recorder 
   {
   public:
+    /// @brief The mets::evaluable_solution will be stored as a
+    /// reference: please provide an instance that is not
+    /// modified/needed elsewhere.
+    ///
+    /// @param best The instance used to store the best solution found
+    /// (will be modified).
     best_ever_solution(evaluable_solution& best) : 
       solution_recorder(), 
       best_ever_m(best) 
@@ -184,13 +190,15 @@ namespace mets {
     best_ever_solution& operator=(const best_ever_solution&);
 
     /// @brief Accept is called at the end of each iteration for an
-    /// opportunity to record the best move ever.
+    /// opportunity to record the best solution found during the
+    /// search.
     bool accept(const feasible_solution& sol);
 
     /// @brief Returns the best solution found since the beginning.
     const evaluable_solution& best_seen() const 
     { return best_ever_m; }
 
+    /// @brief Best cost seen.
     gol_type best_cost() const 
     { return best_ever_m.cost_function(); }
   protected:

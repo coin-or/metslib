@@ -101,7 +101,8 @@ mets::local_search<move_manager_t>::search()
       {
 	base_t::moves_m.refresh(base_t::working_solution_m);
 	best_movit = base_t::moves_m.end();
-	gol_type best_cost = base_t::best_solution_m.cost_function();
+	base_t::solution_recorder_m.accept(base_t::working_solution_m);
+	gol_type best_cost = base_t::solution_recorder_m.best_cost();
 	for(typename move_manager::iterator movit = base_t::moves_m.begin();
 	    movit != base_t::moves_m.end(); ++movit)
 	  {
@@ -118,11 +119,11 @@ mets::local_search<move_manager_t>::search()
 	if(best_movit != base_t::moves_m.end()) 
 	  {
 	    (*best_movit)->apply(base_t::working_solution_m);
-	    base_t::best_solution_m = base_t::working_solution_m;
+	    base_t::solution_recorder_m.accept(base_t::working_solution_m);
 	    base_t::current_move_m = best_movit;
 	    this->notify();
 	  }
-
+	
       } while(best_movit != base_t::moves_m.end());
   }
 }
