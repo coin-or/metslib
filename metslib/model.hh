@@ -378,8 +378,8 @@ namespace mets {
     evaluate(const mets::feasible_solution& s) const
     { const permutation_problem& sol = 
 	static_cast<const permutation_problem&>(s);
-      return sol.evaluate_swap(p1, p2); }
-
+      return sol.cost_function() + sol.evaluate_swap(p1, p2); }
+    
     /// @brief Virtual method that applies the move on a point
     void
     apply(mets::feasible_solution& s) const

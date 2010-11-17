@@ -95,36 +95,36 @@ mets::local_search<move_manager_t>::search()
   throw(no_moves_error)
 {
   typedef abstract_search<move_manager_t> base_t;
-  {
-    typename move_manager_t::iterator best_movit;
-    do
-      {
-	base_t::moves_m.refresh(base_t::working_solution_m);
-	best_movit = base_t::moves_m.end();
-	base_t::solution_recorder_m.accept(base_t::working_solution_m);
-	gol_type best_cost = base_t::solution_recorder_m.best_cost();
-	for(typename move_manager::iterator movit = base_t::moves_m.begin();
-	    movit != base_t::moves_m.end(); ++movit)
-	  {
-	    // evaluate the cost after the move
-	    gol_type cost = (*movit)->evaluate(base_t::working_solution_m);
-	    if(cost < best_cost - epsilon)
-	      {
-		best_cost = cost;
-		best_movit = movit;
-		if(short_circuit_m) break;
-	      }
-	  } // end for each move
-	
-	if(best_movit != base_t::moves_m.end()) 
-	  {
-	    (*best_movit)->apply(base_t::working_solution_m);
-	    base_t::solution_recorder_m.accept(base_t::working_solution_m);
-	    base_t::current_move_m = best_movit;
-	    this->notify();
-	  }
-	
-      } while(best_movit != base_t::moves_m.end());
-  }
+  typename move_manager_t::iterator best_movit;
+
+  base_t::solution_recorder_m.accept(base_t::working_solution_m);
+  gol_type best_cost = base_t::solution_recorder_m.best_cost();
+
+  do
+    {
+      base_t::moves_m.refresh(base_t::working_solution_m);
+      best_movit = base_t::moves_m.end();
+      for(typename move_manager::iterator movit = base_t::moves_m.begin();
+	  movit != base_t::moves_m.end(); ++movit)
+	{
+	  // evaluate the cost after the move
+	  gol_type cost = (*movit)->evaluate(base_t::working_solution_m);
+	  if(cost < best_cost - epsilon)
+	    {
+	      best_cost = cost;
+	      best_movit = movit;
+	      if(short_circuit_m) break;
+	    }
+	} // end for each move
+      
+      if(best_movit != base_t::moves_m.end()) 
+	{
+	  (*best_movit)->apply(base_t::working_solution_m);
+	  base_t::solution_recorder_m.accept(base_t::working_solution_m);
+	  base_t::current_move_m = best_movit;
+	  this->notify();
+	}
+      
+    } while(best_movit != base_t::moves_m.end());
 }
 #endif

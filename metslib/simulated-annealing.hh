@@ -66,20 +66,30 @@ namespace mets {
     /// @param working The working solution (this will be modified
     /// during search).
     ///
-    /// @param best_so_far A different solution
-    /// instance used to store the best solution found.
+    /// @param recorder A solution recorder (possibly holding a
+    /// different solution instance) used to record the best solution
+    /// found.
     ///
     /// @param moveman A problem specific implementation of the
-    /// move_manager_type used to generate the neighborhood.
+    /// move_manager_type used to generate the neighborhood (the
+    /// choice of the neighbourhood and its exploration greatly
+    /// influences the algorithm quality and speed).
     ///
     /// @param tc The termination criteria used to terminate the
     /// search process, this is an extension to the standard Simulated
-    /// Annealing: you can give a termination criteria that termiantes
-    /// when temperature reaches 0.
+    /// Annealing: the algorithm terminates either when the
+    /// termination criterion is met or when the temperature is <= 0.
     ///
-    /// @param cs The annealing schedule that decorates this SA instance.
+    /// @param cs The annealing schedule that will be used by the
+    /// algorithm to regulate the temperature at each iteration (many
+    /// have been proposed in literature and influence the quality and
+    /// speed of the algorithm).
     ///
-    /// @param starting_temp The starting SA temperature.
+    /// @param starting_temp The starting SA temperature (this is an
+    /// important parameter that depends on the problem and will
+    /// influence the search quality and duration).
+    ///
+    /// @param K The "Boltzmann" constant that we want ot use (default is 1).
     simulated_annealing(feasible_solution& starting_point,
 			solution_recorder& recorder,
 			move_manager_type& moveman,
