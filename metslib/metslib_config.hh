@@ -3,8 +3,8 @@
 #ifdef HAVE_CONFIG_H
 #  ifndef METSLIB_TESTING
 #    include "metslib_ah.hh"
-#else
-#    include "metslib-config.h"
+#  else
+#    include "metslib/metslib_ah.hh"
 #  endif
 #else
 #  if defined (_WIN32)

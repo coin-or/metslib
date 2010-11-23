@@ -3,7 +3,7 @@
 
 using namespace std;
 
-class zero_sol : public mets::copyable_solution
+class zero_sol : public mets::evaluable_solution
 {
   mets::gol_type cost_function() const
   { return 0.0; }
