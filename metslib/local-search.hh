@@ -104,7 +104,7 @@ mets::local_search<move_manager_t>::search()
     {
       base_t::moves_m.refresh(base_t::working_solution_m);
       best_movit = base_t::moves_m.end();
-      for(typename move_manager::iterator movit = base_t::moves_m.begin();
+      for(typename move_manager_t::iterator movit = base_t::moves_m.begin();
 	  movit != base_t::moves_m.end(); ++movit)
 	{
 	  // evaluate the cost after the move
