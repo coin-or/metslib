@@ -200,6 +200,27 @@ namespace mets {
     gol_type level_m;
   };
 
+  /// The mets::forever termination criterion will never terminate the
+  /// search.
+  ///
+  /// This can be used in the mets::simulated_annealing to stop only
+  /// when the temperature reaches 0 or in the mets::tabu_search if we
+  /// want to stop for another reason (e.g. some components or
+  /// observer raises an exception).
+  ///
+  /// The forever termination criterion cannot be chained. When
+  /// chained behaviour is undetermined.
+  class forever : public termination_criteria_chain
+  {
+  public:
+    forever() : termination_criteria_chain() {}
+    bool 
+    operator()(const feasible_solution& fs)
+    { return false; }
+    void reset() 
+    { termination_criteria_chain::reset(); }
+  };
+
   /// @}
 }
 
