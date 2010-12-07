@@ -90,7 +90,7 @@ namespace mets {
     /// influence the search quality and duration).
     ///
     /// @param K The "Boltzmann" constant that we want ot use (default is 1).
-    simulated_annealing(feasible_solution& starting_point,
+    simulated_annealing(evaluable_solution& starting_point,
 			solution_recorder& recorder,
 			move_manager_type& moveman,
 			termination_criteria_chain& tc,
@@ -178,7 +178,7 @@ namespace mets {
 
 template<typename move_manager_t>
 mets::simulated_annealing<move_manager_t>::
-simulated_annealing(feasible_solution& working,
+simulated_annealing(evaluable_solution& working,
 		    solution_recorder& recorder,
 		    move_manager_t& moveman,
 		    termination_criteria_chain& tc,
@@ -204,7 +204,10 @@ mets::simulated_annealing<move_manager_t>::search()
         && current_temp_m > 0.0)
     {
       gol_type actual_cost = base_t::working_solution_m.cost_function();
-      gol_type best_cost = base_t::solution_recorder_m.best_cost();
+      gol_type best_cost = 
+	static_cast<mets::evaluable_solution&>(base_t::working_solution_m)
+	.cost_function();
+
       base_t::moves_m.refresh(base_t::working_solution_m);
       for(typename move_manager_t::iterator movit = base_t::moves_m.begin(); 
 	  movit != base_t::moves_m.end(); ++movit)

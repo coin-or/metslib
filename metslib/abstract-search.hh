@@ -3,12 +3,14 @@
 // the CPL 1.0 as published by the Open Source Initiative
 // http://www.opensource.org/licenses/cpl1.0.php
 
+#include <iostream>
+
 #ifndef METS_ABSTRACT_SEARCH_HH_
 #define METS_ABSTRACT_SEARCH_HH_
 
 namespace mets {
 
-  /// @defgroup common Common pieces
+  /// @defgroup common Common components
   /// @{
 
   /// @brief The solution recorder is used by search algorithm, at the
@@ -161,7 +163,7 @@ namespace mets {
 
   /// @}
 
-  /// @defgroup common Common pieces
+  /// @defgroup common Common components
   /// @{
 
   /// @brief The best ever solution recorder can be used as a simple
@@ -233,6 +235,67 @@ namespace mets {
     /// when a move, an improvement or something else happens
     virtual void
     update(search_type* algorithm) = 0;
+  };
+
+
+  template<typename neighborhood_t>
+  struct iteration_logger : public mets::search_listener<neighborhood_t>
+  {
+    explicit
+    iteration_logger(std::ostream& o) 
+      : mets::search_listener<neighborhood_t>(), 
+	iteration(0), 
+	os(o) 
+    { }
+    
+    void 
+    update(mets::abstract_search<neighborhood_t>* as) 
+    {
+      const mets::feasible_solution& p = as->working();
+      if(as->step() == mets::abstract_search<neighborhood_t>::MOVE_MADE)
+	{
+	  os << iteration++ << "\t" 
+	     << dynamic_cast<const mets::evaluable_solution&>(p).cost_function()
+	     << "\n";
+	}
+    }
+    
+  protected:
+    int iteration;
+    std::ostream& os;
+  };
+
+  template<typename neighborhood_t>
+  struct improvement_logger : public mets::search_listener<neighborhood_t>
+  {
+    explicit
+    improvement_logger(std::ostream& o) 
+      : mets::search_listener<neighborhood_t>(), 
+	iteration(0), 
+	os(o) 
+    { }
+    
+    void 
+    update(mets::abstract_search<neighborhood_t>* as) 
+    {
+      const mets::feasible_solution& p = as->working();
+
+      if(as->step() == mets::abstract_search<neighborhood_t>::MOVE_MADE)
+	{
+	  iteration++;
+	}
+      else if(as->step() == 
+	      mets::abstract_search<neighborhood_t>::IMPROVEMENT_MADE)
+	{
+	  os << iteration++ << "\t" 
+	     << dynamic_cast<const mets::evaluable_solution&>(p).cost_function()
+	     << " (*)\n";
+	}
+    }
+    
+  protected:
+    int iteration;
+    std::ostream& os;
   };
 
   /// @}

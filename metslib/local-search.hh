@@ -50,7 +50,7 @@ namespace mets {
     ///
     /// @param short_circuit Wether the search should stop on
     /// the first improving move or not.
-    local_search(feasible_solution& starting_point,
+    local_search(evaluable_solution& starting_point,
 		 solution_recorder& recorder,
 		 move_manager_type& moveman,
 		 bool short_circuit = false);
@@ -78,7 +78,7 @@ namespace mets {
 }
 
 template<typename move_manager_t>
-mets::local_search<move_manager_t>::local_search(feasible_solution& working,
+mets::local_search<move_manager_t>::local_search(evaluable_solution& working,
 						 solution_recorder& recorder,
 						 move_manager_t& moveman,
 						 bool short_circuit)
@@ -98,7 +98,10 @@ mets::local_search<move_manager_t>::search()
   typename move_manager_t::iterator best_movit;
 
   base_t::solution_recorder_m.accept(base_t::working_solution_m);
-  gol_type best_cost = base_t::solution_recorder_m.best_cost();
+
+  gol_type best_cost = 
+    static_cast<mets::evaluable_solution&>(base_t::working_solution_m)
+    .cost_function();
 
   do
     {
