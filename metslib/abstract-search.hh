@@ -271,8 +271,9 @@ namespace mets {
     explicit
     improvement_logger(std::ostream& o) 
       : mets::search_listener<neighborhood_t>(), 
-	iteration(0), 
-	os(o) 
+	iteration_m(0), 
+	best_m(std::numeric_limits<double>::max()),
+	os_m(o) 
     { }
     
     void 
@@ -282,20 +283,23 @@ namespace mets {
 
       if(as->step() == mets::abstract_search<neighborhood_t>::MOVE_MADE)
 	{
-	  iteration++;
-	}
-      else if(as->step() == 
-	      mets::abstract_search<neighborhood_t>::IMPROVEMENT_MADE)
-	{
-	  os << iteration++ << "\t" 
-	     << dynamic_cast<const mets::evaluable_solution&>(p).cost_function()
-	     << " (*)\n";
+	  iteration_m++;
+	  double val = dynamic_cast<const mets::evaluable_solution&>(p)
+	    .cost_function();
+	  if(val < best_m - epsilon) 
+	    {	     
+	      best_m = val;
+	      os_m << iteration_m << "\t" 
+		   << best_m
+		   << " (*)\n";
+	    }
 	}
     }
     
   protected:
-    int iteration;
-    std::ostream& os;
+    int iteration_m;
+    double best_m;
+    std::ostream& os_m;
   };
 
   /// @}

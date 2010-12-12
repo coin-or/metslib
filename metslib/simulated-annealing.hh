@@ -96,6 +96,7 @@ namespace mets {
 			termination_criteria_chain& tc,
 			abstract_cooling_schedule& cs,
 			double starting_temp,
+			double stop_temp = 1e-7,
 			double K = 1.0);
     
     /// purposely not implemented (see Effective C++)
@@ -129,6 +130,7 @@ namespace mets {
     termination_criteria_chain& termination_criteria_m;
     abstract_cooling_schedule& cooling_schedule_m;
     double starting_temp_m;
+    double stop_temp_m;
     double current_temp_m;
     double K_m;
 #if defined (METSLIB_HAVE_UNORDERED_MAP) && !defined (METSLIB_TR1_MIXED_NAMESPACE)
@@ -184,10 +186,12 @@ simulated_annealing(evaluable_solution& working,
 		    termination_criteria_chain& tc,
 		    abstract_cooling_schedule& cs,
 		    double starting_temp, 
+		    double stop_temp,
 		    double K)
   : abstract_search<move_manager_t>(working, recorder, moveman),
     termination_criteria_m(tc), cooling_schedule_m(cs),
-    starting_temp_m(starting_temp), current_temp_m(), K_m(K),
+    starting_temp_m(starting_temp), stop_temp_m(stop_temp),
+    current_temp_m(), K_m(K),
     ureal(0.0,1.0), rng(), gen(rng, ureal)
 { 
 }
@@ -201,9 +205,11 @@ mets::simulated_annealing<move_manager_t>::search()
 
   current_temp_m = starting_temp_m;
   while(!termination_criteria_m(base_t::working_solution_m) 
-        && current_temp_m > 0.0)
+        && current_temp_m > stop_temp_m)
     {
-      gol_type actual_cost = base_t::working_solution_m.cost_function();
+      gol_type actual_cost = 
+	static_cast<mets::evaluable_solution&>(base_t::working_solution_m)
+	.cost_function();
       gol_type best_cost = 
 	static_cast<mets::evaluable_solution&>(base_t::working_solution_m)
 	.cost_function();
