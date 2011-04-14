@@ -6,5 +6,4 @@ includedir=@includedir@
 Name: METS tabu search generic library.
 Description: METS Tabu Search Metaheuristic C++ generic library.
 Version: @VERSION@
-Libs: -L${libdir} -l@GENERIC_LIBRARY_NAME@
 Cflags: -I${includedir}/@GENERIC_LIBRARY_NAME@-@GENERIC_API_VERSION@ -I${libdir}/@GENERIC_LIBRARY_NAME@-@GENERIC_API_VERSION@/include
