@@ -75,7 +75,7 @@ namespace mets {
     /// @param mov The accepted move (the move just made).
     /// @return True if the move is to be accepted.
     virtual void 
-    accept(feasible_solution& fs, move& mov);
+    accept(feasible_solution& fs, move& mov, gol_type evaluation);
     
     /// @brief The function that decides if we shoud accept a tabu move
     ///
@@ -83,7 +83,7 @@ namespace mets {
     /// @param mov The move to be made (the move that is being evaluated).
     /// @return True if the move is to be accepted.
     virtual bool 
-    operator()(feasible_solution& fs, move& mov) const;
+    operator()(feasible_solution& fs, move& mov, gol_type evaluation) const;
     
   protected:
     aspiration_criteria_chain* next_m;
@@ -352,10 +352,10 @@ namespace mets {
     reset();
 
     void
-    accept(feasible_solution& fs, move& mov);
+    accept(feasible_solution& fs, move& mov, gol_type evaluation);
 
     bool 
-    operator()(feasible_solution& fs, move& mov) const;
+    operator()(feasible_solution& fs, move& mov, gol_type evaluation) const;
 
   protected:
     gol_type best_m;
@@ -419,7 +419,8 @@ void mets::tabu_search<move_manager_t>::search()
 		{
 		  aspiration_criteria_met = 
 		    aspiration_criteria_m(base_t::working_solution_m, 
-					  **movit);
+					  **movit,
+					  cost);
 		}
 	      
 	      if(!is_tabu || aspiration_criteria_met)
@@ -449,7 +450,9 @@ void mets::tabu_search<move_manager_t>::search()
       base_t::step_m = base_t::MOVE_MADE;
       this->notify();
       
-      aspiration_criteria_m.accept(base_t::working_solution_m, **best_movit);
+      aspiration_criteria_m.accept(base_t::working_solution_m, 
+				   **best_movit, 
+				   best_move_cost);
       
       if(base_t::solution_recorder_m.accept(base_t::working_solution_m))
 	{
@@ -558,17 +561,19 @@ mets::aspiration_criteria_chain::reset()
 
 void 
 mets::aspiration_criteria_chain::accept(feasible_solution& fs, 
-					move& mov)
+					move& mov,
+					gol_type eval)
 {
-  if(next_m) next_m->accept(fs, mov);
+  if(next_m) next_m->accept(fs, mov, eval);
 }
 
 bool 
 mets::aspiration_criteria_chain::operator()(feasible_solution& fs, 
-					    move& mov) const
+					    move& mov,
+					    gol_type eval) const
 {
   if(next_m)
-    return next_m->operator()(fs, mov);
+    return next_m->operator()(fs, mov, eval);
   else
     return false;
 }
@@ -594,20 +599,24 @@ void mets::best_ever_criteria::reset()
 }
 
 void
-mets::best_ever_criteria::accept(feasible_solution& fs, move& mov) 
+mets::best_ever_criteria::accept(feasible_solution& fs, 
+				 move& mov, 
+				 gol_type eval) 
 {
   best_m = std::min(dynamic_cast<const evaluable_solution&>(fs).cost_function(), best_m);
-  aspiration_criteria_chain::accept(fs, mov);
+  aspiration_criteria_chain::accept(fs, mov, eval);
 }  
 
 bool 
-mets::best_ever_criteria::operator()(feasible_solution& fs, move& mov) const
+mets::best_ever_criteria::operator()(feasible_solution& fs, 
+				     move& mov, 
+				     gol_type eval) const
 { 
   /// the solution is the solution before applying mov.
-  if(mov.evaluate(fs) < best_m - tolerance_m)
+  if(eval < best_m - tolerance_m)
     return true;
   else
-    return aspiration_criteria_chain::operator()(fs, mov); 
+    return aspiration_criteria_chain::operator()(fs, mov, eval); 
 }
 
 #endif
