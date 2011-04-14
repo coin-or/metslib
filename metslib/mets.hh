@@ -124,9 +124,6 @@
 /// Simulated Annealing, Iterated Local Search, Random Restart Local
 /// Search).
 ///
-namespace mets {
-  static const double epsilon = 1e-7;
-}
 
 #include "observer.hh"
 #include "model.hh"
@@ -138,5 +135,12 @@ namespace mets {
 
 
 std::ostream& operator<<(std::ostream& os, const mets::printable& p);
+
+//________________________________________________________________________
+std::ostream& operator<<(std::ostream& os, const mets::printable& p)
+{
+  p.print(os);
+  return os;
+}
 
 #endif

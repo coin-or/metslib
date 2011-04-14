@@ -269,11 +269,12 @@ namespace mets {
   struct improvement_logger : public mets::search_listener<neighborhood_t>
   {
     explicit
-    improvement_logger(std::ostream& o) 
+    improvement_logger(std::ostream& o, gol_type epsilon = 1e-7) 
       : mets::search_listener<neighborhood_t>(), 
 	iteration_m(0), 
 	best_m(std::numeric_limits<double>::max()),
-	os_m(o) 
+	os_m(o),
+	epsilon_m(epsilon)
     { }
     
     void 
@@ -286,7 +287,7 @@ namespace mets {
 	  iteration_m++;
 	  double val = dynamic_cast<const mets::evaluable_solution&>(p)
 	    .cost_function();
-	  if(val < best_m - epsilon) 
+	  if(val < best_m - epsilon_m) 
 	    {	     
 	      best_m = val;
 	      os_m << iteration_m << "\t" 
@@ -300,10 +301,27 @@ namespace mets {
     int iteration_m;
     double best_m;
     std::ostream& os_m;
+    gol_type epsilon_m;
   };
 
   /// @}
 
 
 }
+
+mets::solution_recorder::~solution_recorder() 
+{ }
+
+bool
+mets::best_ever_solution::accept(const mets::feasible_solution& sol)
+{
+  const evaluable_solution& s = dynamic_cast<const mets::evaluable_solution&>(sol);
+  if(s.cost_function() < best_ever_m.cost_function())
+    {
+      best_ever_m.copy_from(s);
+      return true;
+    }
+  return false;
+}
+
 #endif

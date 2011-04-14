@@ -53,6 +53,7 @@ namespace mets {
     local_search(evaluable_solution& starting_point,
 		 solution_recorder& recorder,
 		 move_manager_type& moveman,
+		 gol_type epsilon = 1e-7,
 		 bool short_circuit = false);
 
     /// purposely not implemented (see Effective C++)
@@ -71,6 +72,7 @@ namespace mets {
 
   protected:
     bool short_circuit_m;
+    gol_type epsilon_m;
   };
 
   /// @}
@@ -81,9 +83,10 @@ template<typename move_manager_t>
 mets::local_search<move_manager_t>::local_search(evaluable_solution& working,
 						 solution_recorder& recorder,
 						 move_manager_t& moveman,
+						 gol_type epsilon,
 						 bool short_circuit)
   : abstract_search<move_manager_t>(working, recorder, moveman),
-    short_circuit_m(short_circuit)
+    short_circuit_m(short_circuit), epsilon_m(epsilon)
 { 
   typedef abstract_search<move_manager_t> base_t;
   base_t::step_m = 0; 
@@ -112,7 +115,7 @@ mets::local_search<move_manager_t>::search()
 	{
 	  // evaluate the cost after the move
 	  gol_type cost = (*movit)->evaluate(base_t::working_solution_m);
-	  if(cost < best_cost - epsilon)
+	  if(cost < best_cost - epsilon_m)
 	    {
 	      best_cost = cost;
 	      best_movit = movit;
