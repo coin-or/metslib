@@ -694,7 +694,7 @@ namespace mets {
 }
 
 //________________________________________________________________________
-void
+inline void
 mets::permutation_problem::copy_from(const mets::copyable& other)
 {
   const mets::permutation_problem& o = 
@@ -704,7 +704,7 @@ mets::permutation_problem::copy_from(const mets::copyable& other)
 }
 
 //________________________________________________________________________
-bool
+inline bool
 mets::swap_elements::operator==(const mets::mana_move& o) const
 {
   try {
@@ -718,7 +718,7 @@ mets::swap_elements::operator==(const mets::mana_move& o) const
 
 //________________________________________________________________________
 
-void
+inline void
 mets::invert_subsequence::apply(mets::feasible_solution& s) const
 { 
   mets::permutation_problem& sol = 
@@ -735,7 +735,7 @@ mets::invert_subsequence::apply(mets::feasible_solution& s) const
     }
 }
 
-mets::gol_type
+inline mets::gol_type
 mets::invert_subsequence::evaluate(const mets::feasible_solution& s) const
 { 
   const mets::permutation_problem& sol = 
@@ -754,7 +754,7 @@ mets::invert_subsequence::evaluate(const mets::feasible_solution& s) const
   return eval;
 }
 
-bool
+inline bool
 mets::invert_subsequence::operator==(const mets::mana_move& o) const
 {
   try {

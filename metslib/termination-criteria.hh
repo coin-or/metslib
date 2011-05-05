@@ -231,7 +231,7 @@ namespace mets {
 }
 
 //________________________________________________________________________
-bool 
+inline bool 
 mets::termination_criteria_chain::operator()(const feasible_solution& fs)
 {
   if(next_m)
@@ -241,14 +241,14 @@ mets::termination_criteria_chain::operator()(const feasible_solution& fs)
 }
 
 //________________________________________________________________________
-void
+inline void
 mets::termination_criteria_chain::reset()
 {
   if(next_m) next_m->reset();
 }
 
 //________________________________________________________________________
-bool 
+inline bool 
 mets::noimprove_termination_criteria::operator()(const feasible_solution& fs)
 {
   mets::gol_type current_cost = 

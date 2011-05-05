@@ -469,14 +469,14 @@ void mets::tabu_search<move_manager_t>::search()
 
 // chain of responsibility
 
-void
+inline void
 mets::tabu_list_chain::tabu(feasible_solution& sol, /* const */ move& mov)
 {
   if(next_m)
     next_m->tabu(sol, mov);
 }
 
-bool
+inline bool
 mets::tabu_list_chain::is_tabu(feasible_solution& sol, /* const */ move& mov) const
 {
   if(next_m) 
@@ -485,14 +485,14 @@ mets::tabu_list_chain::is_tabu(feasible_solution& sol, /* const */ move& mov) co
     return false;
 }
 
-mets::simple_tabu_list::~simple_tabu_list()
+inline mets::simple_tabu_list::~simple_tabu_list()
 { 
   for(move_map_type::iterator m = tabu_hash_m.begin(); 
       m!=tabu_hash_m.end(); ++m)
     delete m->first;
 }
 
-void
+inline void
 mets::simple_tabu_list::tabu(feasible_solution& sol, /* const */ move& mov)
 {
   mana_move* mc = 
@@ -536,7 +536,7 @@ mets::simple_tabu_list::tabu(feasible_solution& sol, /* const */ move& mov)
   tabu_list_chain::tabu(sol, mov);
 }
 
-bool
+inline bool
 mets::simple_tabu_list::is_tabu(feasible_solution& sol, move& mov) const
 {
   // hash set. very fast but requires C++ ISO TR1 extension
@@ -552,14 +552,14 @@ mets::simple_tabu_list::is_tabu(feasible_solution& sol, move& mov) const
 
 //////////////////////////////////////////////////////////////////////////
 // aspiration_criteria_chain
-void 
+inline void 
 mets::aspiration_criteria_chain::reset()
 {
   if(next_m)
     return next_m->reset();
 }
 
-void 
+inline void 
 mets::aspiration_criteria_chain::accept(feasible_solution& fs, 
 					move& mov,
 					gol_type eval)
@@ -567,7 +567,7 @@ mets::aspiration_criteria_chain::accept(feasible_solution& fs,
   if(next_m) next_m->accept(fs, mov, eval);
 }
 
-bool 
+inline bool 
 mets::aspiration_criteria_chain::operator()(feasible_solution& fs, 
 					    move& mov,
 					    gol_type eval) const
@@ -580,25 +580,26 @@ mets::aspiration_criteria_chain::operator()(feasible_solution& fs,
 
 //////////////////////////////////////////////////////////////////////////
 // best_ever_criteria
-mets::best_ever_criteria::best_ever_criteria(double tolerance) 
+inline mets::best_ever_criteria::best_ever_criteria(double tolerance) 
   : aspiration_criteria_chain(),
     best_m(std::numeric_limits<gol_type>::max()),
     tolerance_m(tolerance)
 { }
 
-mets::best_ever_criteria::best_ever_criteria(aspiration_criteria_chain* next, double tolerance) 
+inline mets::best_ever_criteria::best_ever_criteria(aspiration_criteria_chain* next, double tolerance) 
   : aspiration_criteria_chain(next),
     best_m(std::numeric_limits<gol_type>::max()),
     tolerance_m(tolerance)
 { }
     
-void mets::best_ever_criteria::reset()
+inline void 
+mets::best_ever_criteria::reset()
 {
   best_m = std::numeric_limits<mets::gol_type>::max();
   aspiration_criteria_chain::reset();
 }
 
-void
+inline void
 mets::best_ever_criteria::accept(feasible_solution& fs, 
 				 move& mov, 
 				 gol_type eval) 
@@ -607,7 +608,7 @@ mets::best_ever_criteria::accept(feasible_solution& fs,
   aspiration_criteria_chain::accept(fs, mov, eval);
 }  
 
-bool 
+inline bool 
 mets::best_ever_criteria::operator()(feasible_solution& fs, 
 				     move& mov, 
 				     gol_type eval) const

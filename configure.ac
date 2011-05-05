@@ -21,37 +21,6 @@ GENERIC_MICRO_VERSION=2
 GENERIC_API_VERSION=$GENERIC_MAJOR_VERSION.$GENERIC_MINOR_VERSION
 AC_SUBST(GENERIC_API_VERSION)
 
-# shared library versioning
-# =========================
-#
-# libtool library versions are described by three integers:
-# current
-#    The most recent interface number that this library implements.
-# revision
-#    The implementation number of the current interface.
-# age
-#    The difference between the newest and oldest interfaces that this
-#    library implements. In other words, the library implements all
-#    the interface numbers in the range from number current - age to
-#    current.
-#
-# If two libraries have identical current and age numbers, then the
-# dynamic linker chooses the library with the greater revision number.
-#
-GENERIC_LIBRARY_VERSION=5:2:0
-#                       | | |
-#                +------+ | +---+
-#                |        |     |
-#             current:revision:age
-#                |        |     |
-#                |        |     +- increment if interfaces have been added
-#                |        |        set to zero if interfaces have been removed
-#                                  or changed
-#                |        +- increment if source code has changed
-#                |           set to zero if current is incremented
-#                +- increment if interfaces have been added, removed or changed
-
-
 dnl --------------------------------
 dnl Package name and version number
 dnl --------------------------------
@@ -79,9 +48,7 @@ dnl -----------------------------------------------
 
 PKG_PROG_PKG_CONFIG([0.9])
 AC_PROG_CXX
-# AM_PROG_LIBTOOL
 AM_SANITY_CHECK
-
 AC_LANG_CPLUSPLUS
 
 

@@ -309,10 +309,10 @@ namespace mets {
 
 }
 
-mets::solution_recorder::~solution_recorder() 
+inline mets::solution_recorder::~solution_recorder() 
 { }
 
-bool
+inline bool
 mets::best_ever_solution::accept(const mets::feasible_solution& sol)
 {
   const evaluable_solution& s = dynamic_cast<const mets::evaluable_solution&>(sol);

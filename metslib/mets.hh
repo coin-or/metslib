@@ -134,10 +134,9 @@
 #include "simulated-annealing.hh"
 
 
-std::ostream& operator<<(std::ostream& os, const mets::printable& p);
-
 //________________________________________________________________________
-std::ostream& operator<<(std::ostream& os, const mets::printable& p)
+inline std::ostream& 
+operator<<(std::ostream& os, const mets::printable& p)
 {
   p.print(os);
   return os;
