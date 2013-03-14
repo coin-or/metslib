@@ -2,7 +2,7 @@ dnl --------------------------------
 dnl Initialization macros.
 dnl --------------------------------
 
-AC_INIT([metslib], [0.5.0], [mirko.maischberger@gmail.com])
+AC_INIT([metslib], [0.6.0], [mirko.maischberger@gmail.com])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([config])
 
@@ -14,43 +14,12 @@ GENERIC_LIBRARY_NAME=metslib
 
 #release versioning
 GENERIC_MAJOR_VERSION=0
-GENERIC_MINOR_VERSION=5
+GENERIC_MINOR_VERSION=6
 GENERIC_MICRO_VERSION=0
 
 #API version (often = GENERIC_MAJOR_VERSION.GENERIC_MINOR_VERSION)
 GENERIC_API_VERSION=$GENERIC_MAJOR_VERSION.$GENERIC_MINOR_VERSION
 AC_SUBST(GENERIC_API_VERSION)
-
-# shared library versioning
-# =========================
-#
-# libtool library versions are described by three integers:
-# current
-#    The most recent interface number that this library implements.
-# revision
-#    The implementation number of the current interface.
-# age
-#    The difference between the newest and oldest interfaces that this
-#    library implements. In other words, the library implements all
-#    the interface numbers in the range from number current - age to
-#    current.
-#
-# If two libraries have identical current and age numbers, then the
-# dynamic linker chooses the library with the greater revision number.
-#
-GENERIC_LIBRARY_VERSION=5:0:0
-#                       | | |
-#                +------+ | +---+
-#                |        |     |
-#             current:revision:age
-#                |        |     |
-#                |        |     +- increment if interfaces have been added
-#                |        |        set to zero if interfaces have been removed
-#                                  or changed
-#                |        +- increment if source code has changed
-#                |           set to zero if current is incremented
-#                +- increment if interfaces have been added, removed or changed
-
 
 dnl --------------------------------
 dnl Package name and version number
@@ -79,9 +48,7 @@ dnl -----------------------------------------------
 
 PKG_PROG_PKG_CONFIG([0.9])
 AC_PROG_CXX
-AM_PROG_LIBTOOL
 AM_SANITY_CHECK
-
 AC_LANG_CPLUSPLUS
 
 
@@ -136,7 +103,7 @@ dnl Generates Makefile's, configuration files and scripts
 dnl -----------------------------------------------
 
 SHAVE_INIT
-AC_CONFIG_FILES([shave shave-libtool])
+AC_CONFIG_FILES([shave])
 AC_OUTPUT(Makefile \
           metslib.pc \
           metslib/Makefile \

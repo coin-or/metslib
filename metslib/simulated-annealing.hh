@@ -66,26 +66,37 @@ namespace mets {
     /// @param working The working solution (this will be modified
     /// during search).
     ///
-    /// @param best_so_far A different solution
-    /// instance used to store the best solution found.
+    /// @param recorder A solution recorder (possibly holding a
+    /// different solution instance) used to record the best solution
+    /// found.
     ///
     /// @param moveman A problem specific implementation of the
-    /// move_manager_type used to generate the neighborhood.
+    /// move_manager_type used to generate the neighborhood (the
+    /// choice of the neighbourhood and its exploration greatly
+    /// influences the algorithm quality and speed).
     ///
     /// @param tc The termination criteria used to terminate the
     /// search process, this is an extension to the standard Simulated
-    /// Annealing: you can give a termination criteria that termiantes
-    /// when temperature reaches 0.
+    /// Annealing: the algorithm terminates either when the
+    /// termination criterion is met or when the temperature is <= 0.
     ///
-    /// @param cs The annealing schedule that decorates this SA instance.
+    /// @param cs The annealing schedule that will be used by the
+    /// algorithm to regulate the temperature at each iteration (many
+    /// have been proposed in literature and influence the quality and
+    /// speed of the algorithm).
     ///
-    /// @param starting_temp The starting SA temperature.
-    simulated_annealing(feasible_solution& starting_point,
+    /// @param starting_temp The starting SA temperature (this is an
+    /// important parameter that depends on the problem and will
+    /// influence the search quality and duration).
+    ///
+    /// @param K The "Boltzmann" constant that we want ot use (default is 1).
+    simulated_annealing(evaluable_solution& starting_point,
 			solution_recorder& recorder,
 			move_manager_type& moveman,
 			termination_criteria_chain& tc,
 			abstract_cooling_schedule& cs,
 			double starting_temp,
+			double stop_temp = 1e-7,
 			double K = 1.0);
     
     /// purposely not implemented (see Effective C++)
@@ -119,14 +130,15 @@ namespace mets {
     termination_criteria_chain& termination_criteria_m;
     abstract_cooling_schedule& cooling_schedule_m;
     double starting_temp_m;
+    double stop_temp_m;
     double current_temp_m;
     double K_m;
 #if defined (METSLIB_HAVE_UNORDERED_MAP) && !defined (METSLIB_TR1_MIXED_NAMESPACE)
-    std::uniform_real<> ureal;
+    std::uniform_real<double> ureal;
     std::mt19937 rng;
-    std::variate_generator< std::mt19937, std::uniform_real<> > gen;
+    std::variate_generator< std::mt19937, std::uniform_real<double> > gen;
 #else
-    std::tr1::uniform_real<> ureal;
+    std::tr1::uniform_real<double> ureal;
     std::tr1::mt19937 rng;
     std::tr1::variate_generator< std::tr1::mt19937,
 				 std::tr1::uniform_real<double> > gen;
@@ -168,16 +180,18 @@ namespace mets {
 
 template<typename move_manager_t>
 mets::simulated_annealing<move_manager_t>::
-simulated_annealing(feasible_solution& working,
+simulated_annealing(evaluable_solution& working,
 		    solution_recorder& recorder,
 		    move_manager_t& moveman,
 		    termination_criteria_chain& tc,
 		    abstract_cooling_schedule& cs,
 		    double starting_temp, 
+		    double stop_temp,
 		    double K)
   : abstract_search<move_manager_t>(working, recorder, moveman),
     termination_criteria_m(tc), cooling_schedule_m(cs),
-    starting_temp_m(starting_temp), current_temp_m(), K_m(K),
+    starting_temp_m(starting_temp), stop_temp_m(stop_temp),
+    current_temp_m(), K_m(K),
     ureal(0.0,1.0), rng(), gen(rng, ureal)
 { 
 }
@@ -191,10 +205,15 @@ mets::simulated_annealing<move_manager_t>::search()
 
   current_temp_m = starting_temp_m;
   while(!termination_criteria_m(base_t::working_solution_m) 
-        && current_temp_m > 0.0)
+        && current_temp_m > stop_temp_m)
     {
-      gol_type actual_cost = base_t::working_solution_m.cost_function();
-      gol_type best_cost = base_t::solution_recorder_m.best_cost();
+      gol_type actual_cost = 
+	static_cast<mets::evaluable_solution&>(base_t::working_solution_m)
+	.cost_function();
+      gol_type best_cost = 
+	static_cast<mets::evaluable_solution&>(base_t::working_solution_m)
+	.cost_function();
+
       base_t::moves_m.refresh(base_t::working_solution_m);
       for(typename move_manager_t::iterator movit = base_t::moves_m.begin(); 
 	  movit != base_t::moves_m.end(); ++movit)
@@ -205,7 +224,7 @@ mets::simulated_annealing<move_manager_t>::search()
 	  double delta = ((double)(cost-actual_cost));
 	  if(delta < 0 || gen() < exp(-delta/(K_m*current_temp_m)))
 	    {
-	      // accepted: apply, record, lower temperature
+	      // accepted: apply, record, exit for and lower temperature
 	      (*movit)->apply(base_t::working_solution_m);
 	      base_t::current_move_m = movit;
 

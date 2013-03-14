@@ -75,7 +75,7 @@ namespace mets {
     /// @param mov The accepted move (the move just made).
     /// @return True if the move is to be accepted.
     virtual void 
-    accept(feasible_solution& fs, move& mov);
+    accept(const feasible_solution& fs, const move& mov, gol_type evaluation);
     
     /// @brief The function that decides if we shoud accept a tabu move
     ///
@@ -83,7 +83,7 @@ namespace mets {
     /// @param mov The move to be made (the move that is being evaluated).
     /// @return True if the move is to be accepted.
     virtual bool 
-    operator()(feasible_solution& fs, move& mov) const;
+    operator()(const feasible_solution& fs, const move& mov, gol_type evaluation) const;
     
   protected:
     aspiration_criteria_chain* next_m;
@@ -133,7 +133,7 @@ namespace mets {
     /// @param sol The current working solution
     /// @param mov The move to make tabu
     virtual void 
-    tabu(feasible_solution& sol, move& mov) = 0;
+    tabu(const feasible_solution& sol, const move& mov) = 0;
 
     /// @brief True if the move is tabu for the given solution.
     ///
@@ -149,7 +149,7 @@ namespace mets {
     /// @param sol The current working solution
     /// @param mov The move to make tabu
     virtual bool 
-    is_tabu(feasible_solution& sol, move& mov) const = 0;
+    is_tabu(const feasible_solution& sol, const move& mov) const = 0;
 
     ///
     /// @brief Tenure of this tabu list.
@@ -298,7 +298,7 @@ namespace mets {
     /// @param sol The current working solution
     /// @param mov The move to make tabu
     void
-    tabu(feasible_solution& sol, /* const */ move& mov);
+    tabu(const feasible_solution& sol, const move& mov);
 
     /// @brief True if the move is tabu for the given solution.
     ///
@@ -310,22 +310,22 @@ namespace mets {
     /// @return True if this move was already made during the last
     /// tenure iterations
     bool
-    is_tabu(feasible_solution& sol, move& mov) const;
+    is_tabu(const feasible_solution& sol, const move& mov) const;
 
   protected:
-    typedef std::deque<move*> move_list_type;
+    typedef std::deque<const move*> move_list_type;
 #if defined (METSLIB_HAVE_UNORDERED_MAP) && !defined (METSLIB_TR1_MIXED_NAMESPACE)
     typedef std::unordered_map<
-      mana_move*, // Key type
+      const mana_move*, // Key type
       int, //insert a move and the number of times it's present in the list
       mana_move_hash, 
-      dereferenced_equal_to<mana_move*> > move_map_type;
+      dereferenced_equal_to<const mana_move*> > move_map_type;
 #else
     typedef std::tr1::unordered_map<
-      mana_move*, // Key type
+      const mana_move*, // Key type
       int, //insert a move and the number of times it's present in the list
       mana_move_hash, 
-      dereferenced_equal_to<mana_move*> > move_map_type;
+      dereferenced_equal_to<const mana_move*> > move_map_type;
 #endif    
     move_list_type tabu_moves_m;
     move_map_type tabu_hash_m;
@@ -352,10 +352,10 @@ namespace mets {
     reset();
 
     void
-    accept(feasible_solution& fs, move& mov);
+    accept(const feasible_solution& fs, const move& mov, gol_type evaluation);
 
     bool 
-    operator()(feasible_solution& fs, move& mov) const;
+    operator()(const feasible_solution& fs, const move& mov, gol_type evaluation) const;
 
   protected:
     gol_type best_m;
@@ -400,12 +400,12 @@ void mets::tabu_search<move_manager_t>::search()
       for(typename move_manager_t::iterator movit = base_t::moves_m.begin(); 
 	  movit != base_t::moves_m.end(); ++movit)
 	{
-	  // apply move and record proposed cost function
+	  // evaluate proposed move
 	  gol_type cost = (*movit)->evaluate(base_t::working_solution_m);
 	  
 	  // save tabu status
 	  bool is_tabu = tabu_list_m.is_tabu(base_t::working_solution_m, 
-						 **movit);
+					     **movit);
 
 	  // for each non-tabu move record the best one
 	  if(cost < best_move_cost)
@@ -419,7 +419,8 @@ void mets::tabu_search<move_manager_t>::search()
 		{
 		  aspiration_criteria_met = 
 		    aspiration_criteria_m(base_t::working_solution_m, 
-					  **movit);
+					  **movit,
+					  cost);
 		}
 	      
 	      if(!is_tabu || aspiration_criteria_met)
@@ -449,7 +450,9 @@ void mets::tabu_search<move_manager_t>::search()
       base_t::step_m = base_t::MOVE_MADE;
       this->notify();
       
-      aspiration_criteria_m.accept(base_t::working_solution_m, **best_movit);
+      aspiration_criteria_m.accept(base_t::working_solution_m, 
+				   **best_movit, 
+				   best_move_cost);
       
       if(base_t::solution_recorder_m.accept(base_t::working_solution_m))
 	{
@@ -464,6 +467,157 @@ void mets::tabu_search<move_manager_t>::search()
     } // end while(!termination)
 }
 
+// chain of responsibility
 
+inline void
+mets::tabu_list_chain::tabu(const feasible_solution& sol, const move& mov)
+{
+  if(next_m)
+    next_m->tabu(sol, mov);
+}
+
+inline bool
+mets::tabu_list_chain::is_tabu(const feasible_solution& sol, const move& mov) const
+{
+  if(next_m) 
+    return next_m->is_tabu(sol, mov);
+  else 
+    return false;
+}
+
+inline mets::simple_tabu_list::~simple_tabu_list()
+{ 
+  for(move_map_type::iterator m = tabu_hash_m.begin(); 
+      m!=tabu_hash_m.end(); ++m)
+    delete m->first;
+}
+
+inline void
+mets::simple_tabu_list::tabu(const feasible_solution& sol, const move& mov)
+{
+  const mana_move* mc = 
+    dynamic_cast<const mana_move&>(mov).opposite_of();
+
+  // This does nothing if the move was already tabu (can happen when
+  // aspiration criteria is met).
+  std::pair<move_map_type::iterator, bool> 
+    insert_result = tabu_hash_m.insert(std::make_pair(mc, 1));
+
+  // If it was already in the map, increase the counter
+  if(!insert_result.second) 
+    {
+      insert_result.first->second++;
+      delete mc;
+      mc = insert_result.first->first;
+    }
+  // Always add the move at the end of the list (when aspiration
+  // criteria is met a move can be present more than one time in this
+  // list: this is correct, so the last made move is always the last
+  // in the queue). 
+  tabu_moves_m.push_back(mc);
+
+  // Since we use the hash size, the tenure is the number of different
+  // moves on the list (the tabu_moves_m can have more than tenure
+  // elements)
+  while(tabu_hash_m.size() > this->tenure())
+    {
+      // update hash map *and* list structures
+      move_map_type::iterator elem = tabu_hash_m.find
+	(dynamic_cast<const mana_move*>(tabu_moves_m.front()));
+      elem->second--;
+      if(elem->second == 0) 
+	{
+	  const mana_move* tmp = elem->first;
+	  tabu_hash_m.erase(elem);
+	  delete tmp;
+	}
+      tabu_moves_m.pop_front();
+    }
+  tabu_list_chain::tabu(sol, mov);
+}
+
+inline bool
+mets::simple_tabu_list::is_tabu(const feasible_solution& sol, const move& mov) const
+{
+  // hash set. very fast but requires C++ ISO TR1 extension
+  // and an hash function in every move (Omega(1)).
+  bool tabu = (tabu_hash_m.find(&dynamic_cast<const mana_move&>(mov)) 
+	       != tabu_hash_m.end());
+
+  if(tabu)
+    return true;
+
+  return tabu_list_chain::is_tabu(sol, mov);
+}
+
+//////////////////////////////////////////////////////////////////////////
+// aspiration_criteria_chain
+inline void 
+mets::aspiration_criteria_chain::reset()
+{
+  if(next_m)
+    return next_m->reset();
+}
+
+inline void 
+mets::aspiration_criteria_chain::accept(const feasible_solution& fs, 
+					const move& mov,
+					gol_type eval)
+{
+  if(next_m) next_m->accept(fs, mov, eval);
+}
+
+inline bool 
+mets::aspiration_criteria_chain::operator()(const feasible_solution& fs, 
+					    const move& mov,
+					    gol_type eval) const
+{
+  if(next_m)
+    return next_m->operator()(fs, mov, eval);
+  else
+    return false;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// best_ever_criteria
+inline mets::best_ever_criteria::best_ever_criteria(double tolerance) 
+  : aspiration_criteria_chain(),
+    best_m(std::numeric_limits<gol_type>::max()),
+    tolerance_m(tolerance)
+{ }
+
+inline mets::best_ever_criteria::best_ever_criteria(aspiration_criteria_chain* next, double tolerance) 
+  : aspiration_criteria_chain(next),
+    best_m(std::numeric_limits<gol_type>::max()),
+    tolerance_m(tolerance)
+{ }
+    
+inline void 
+mets::best_ever_criteria::reset()
+{
+  best_m = std::numeric_limits<mets::gol_type>::max();
+  aspiration_criteria_chain::reset();
+}
+
+inline void
+mets::best_ever_criteria::accept(const feasible_solution& fs, 
+				 const move& mov, 
+				 gol_type eval) 
+{
+  best_m = std::min(dynamic_cast<const evaluable_solution&>(fs).cost_function(), best_m);
+  aspiration_criteria_chain::accept(fs, mov, eval);
+}  
+
+inline bool 
+mets::best_ever_criteria::operator()(const feasible_solution& fs, 
+				     const move& mov, 
+				     gol_type eval) const
+{ 
+  /// the solution is the solution before applying mov.
+  if(eval < best_m - tolerance_m)
+    return true;
+  else
+    return aspiration_criteria_chain::operator()(fs, mov, eval); 
+}
 
 #endif

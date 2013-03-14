@@ -192,8 +192,11 @@ namespace mets {
 
     /// @brief: Evaluate a swap.
     ///
-    /// Implement this method to evaluate the cost function after the
-    /// swap (without actually modifying the solution).
+    /// Implement this method to evaluate the change in the cost
+    /// function after the swap (without actually modifying the
+    /// solution). The method should return the difference in cost
+    /// between the current position and the position after the swap
+    /// (negative if decreasing and positive otherwise).
     ///
     /// To obtain maximal performance from the algorithm it is
     /// essential, whenever possible, to only compute the cost update
@@ -242,13 +245,13 @@ namespace mets {
   void random_shuffle(permutation_problem& p, random_generator& rng)
   {
 #if defined (METSLIB_HAVE_UNORDERED_MAP) && !defined (METSLIB_TR1_MIXED_NAMESPACE)
-    std::uniform_int<> unigen(0, p.pi_m.size());
-    std::variate_generator<random_generator, 
-      std::uniform_int<> >gen(rng, unigen);
+    std::uniform_int<size_t> unigen;
+    std::variate_generator<random_generator&, 
+      std::uniform_int<size_t> >gen(rng, unigen);
 #else
-    std::tr1::uniform_int<> unigen(0, p.pi_m.size());
-    std::tr1::variate_generator<random_generator, 
-      std::tr1::uniform_int<> >gen(rng, unigen);
+    std::tr1::uniform_int<size_t> unigen;
+    std::tr1::variate_generator<random_generator&, 
+      std::tr1::uniform_int<size_t> >gen(rng, unigen);
 #endif
     std::random_shuffle(p.pi_m.begin(), p.pi_m.end(), gen);
     p.update_cost();
@@ -373,9 +376,10 @@ namespace mets {
     /// @brief Virtual method that applies the move on a point
     gol_type
     evaluate(const mets::feasible_solution& s) const
-    { const permutation_problem& sol = static_cast<const permutation_problem&>(s);
-      return sol.evaluate_swap(p1, p2); }
-
+    { const permutation_problem& sol = 
+	static_cast<const permutation_problem&>(s);
+      return sol.cost_function() + sol.evaluate_swap(p1, p2); }
+    
     /// @brief Virtual method that applies the move on a point
     void
     apply(mets::feasible_solution& s) const
@@ -496,13 +500,13 @@ namespace mets {
 
     /// @brief Selects a different set of moves at each iteration.
     virtual void 
-    refresh(mets::feasible_solution& s) = 0;
+    refresh(const mets::feasible_solution& s) = 0;
     
     /// @brief Iterator type to iterate over moves of the neighborhood
-    typedef std::deque<move*>::iterator iterator;
+    typedef std::deque<const move*>::iterator iterator;
     
     /// @brief Size type
-    typedef std::deque<move*>::size_type size_type;
+    typedef std::deque<const move*>::size_type size_type;
 
     /// @brief Begin iterator of available moves queue.
     iterator begin() 
@@ -517,7 +521,7 @@ namespace mets {
     { return moves_m.size(); }
 
   protected:
-    std::deque<move*> moves_m; ///< The moves queue
+    std::deque<const move*> moves_m; ///< The moves queue
     move_manager(const move_manager&);
   };
   
@@ -547,7 +551,7 @@ namespace mets {
     ~swap_neighborhood();
 
     /// @brief Selects a different set of moves at each iteration.
-    void refresh(mets::feasible_solution& s);
+    void refresh(const mets::feasible_solution& s);
     
   protected:
     random_generator& rng;
@@ -583,7 +587,7 @@ namespace mets {
 
   template<typename random_generator>
   void
-  mets::swap_neighborhood<random_generator>::refresh(mets::feasible_solution& s)
+  mets::swap_neighborhood<random_generator>::refresh(const mets::feasible_solution& s)
   {
     permutation_problem& sol = dynamic_cast<permutation_problem&>(s);
     iterator ii = begin();
@@ -637,7 +641,7 @@ namespace mets {
     }
     
     /// @brief Use the same set set of moves at each iteration.
-    void refresh(mets::feasible_solution& s) { }
+    void refresh(const mets::feasible_solution& s) { }
     
   };
 
@@ -656,14 +660,14 @@ namespace mets {
 
     /// @brief Dtor.
     ~invert_full_neighborhood() { 
-      for(std::deque<move*>::iterator it = moves_m.begin(); 
+      for(std::deque<const move*>::iterator it = moves_m.begin(); 
 	  it != moves_m.end(); ++it)
 	delete *it;
     }
 
     /// @brief This is a static neighborhood
     void 
-    refresh(mets::feasible_solution& s) 
+    refresh(const mets::feasible_solution& s) 
     { }
 
   };
@@ -674,7 +678,7 @@ namespace mets {
   class mana_move_hash 
   {
   public:
-    size_t operator()(mana_move const* mov) const 
+    size_t operator()(const mana_move* mov) const 
     {return mov->hash();}
   };
   
@@ -682,10 +686,83 @@ namespace mets {
   template<typename Tp>
   struct dereferenced_equal_to 
   {
-    bool operator()(const Tp l, 
-		    const Tp r) const 
+    bool operator()(Tp l, Tp r) const 
     { return l->operator==(*r); }
   };
 
 }
+
+//________________________________________________________________________
+inline void
+mets::permutation_problem::copy_from(const mets::copyable& other)
+{
+  const mets::permutation_problem& o = 
+    dynamic_cast<const mets::permutation_problem&>(other);
+  pi_m = o.pi_m;
+  cost_m = o.cost_m;
+}
+
+//________________________________________________________________________
+inline bool
+mets::swap_elements::operator==(const mets::mana_move& o) const
+{
+  try {
+    const mets::swap_elements& other = 
+      dynamic_cast<const mets::swap_elements&>(o);
+    return (this->p1 == other.p1 && this->p2 == other.p2);
+  } catch (std::bad_cast& e) {
+    return false;
+  }
+}
+
+//________________________________________________________________________
+
+inline void
+mets::invert_subsequence::apply(mets::feasible_solution& s) const
+{ 
+  mets::permutation_problem& sol = 
+    static_cast<mets::permutation_problem&>(s);
+  int size = sol.size();
+  int top = p1 < p2 ? (p2-p1+1) : (size+p2-p1+1);
+  for(int ii(0); ii!=top/2; ++ii)
+    {
+      int from = (p1+ii)%size;
+      int to = (size+p2-ii)%size;
+      assert(from >= 0 && from < size);
+      assert(to >= 0 && to < size);
+      sol.apply_swap(from, to); 
+    }
+}
+
+inline mets::gol_type
+mets::invert_subsequence::evaluate(const mets::feasible_solution& s) const
+{ 
+  const mets::permutation_problem& sol = 
+    static_cast<const mets::permutation_problem&>(s);
+  int size = sol.size();
+  int top = p1 < p2 ? (p2-p1+1) : (size+p2-p1+1);
+  mets::gol_type eval = 0.0;
+  for(int ii(0); ii!=top/2; ++ii)
+    {
+      int from = (p1+ii)%size;
+      int to = (size+p2-ii)%size;
+      assert(from >= 0 && from < size);
+      assert(to >= 0 && to < size);
+      eval += sol.evaluate_swap(from, to); 
+    }
+  return eval;
+}
+
+inline bool
+mets::invert_subsequence::operator==(const mets::mana_move& o) const
+{
+  try {
+    const mets::invert_subsequence& other = 
+      dynamic_cast<const mets::invert_subsequence&>(o);
+    return (this->p1 == other.p1 && this->p2 == other.p2);
+  } catch (std::bad_cast& e) {
+    return false;
+  }
+}
+
 #endif

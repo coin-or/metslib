@@ -3,12 +3,14 @@
 // the CPL 1.0 as published by the Open Source Initiative
 // http://www.opensource.org/licenses/cpl1.0.php
 
+#include <iostream>
+
 #ifndef METS_ABSTRACT_SEARCH_HH_
 #define METS_ABSTRACT_SEARCH_HH_
 
 namespace mets {
 
-  /// @defgroup common Common pieces
+  /// @defgroup common Common components
   /// @{
 
   /// @brief The solution recorder is used by search algorithm, at the
@@ -54,8 +56,8 @@ namespace mets {
     /// @brief Set some common values needed for neighborhood based
     /// metaheuristics.
     ///
-    /// @param working The working solution (this will be modified
-    /// during search) 
+    /// @param working The starting point solution (this will be modified
+    /// during search as the working solution) 
     ///
     /// @param recorder A solution recorder instance used to record
     /// the best solution found
@@ -161,7 +163,7 @@ namespace mets {
 
   /// @}
 
-  /// @defgroup common Common pieces
+  /// @defgroup common Common components
   /// @{
 
   /// @brief The best ever solution recorder can be used as a simple
@@ -171,6 +173,12 @@ namespace mets {
   class best_ever_solution : public solution_recorder 
   {
   public:
+    /// @brief The mets::evaluable_solution will be stored as a
+    /// reference: please provide an instance that is not
+    /// modified/needed elsewhere.
+    ///
+    /// @param best The instance used to store the best solution found
+    /// (will be modified).
     best_ever_solution(evaluable_solution& best) : 
       solution_recorder(), 
       best_ever_m(best) 
@@ -184,13 +192,15 @@ namespace mets {
     best_ever_solution& operator=(const best_ever_solution&);
 
     /// @brief Accept is called at the end of each iteration for an
-    /// opportunity to record the best move ever.
+    /// opportunity to record the best solution found during the
+    /// search.
     bool accept(const feasible_solution& sol);
 
     /// @brief Returns the best solution found since the beginning.
     const evaluable_solution& best_seen() const 
     { return best_ever_m; }
 
+    /// @brief Best cost seen.
     gol_type best_cost() const 
     { return best_ever_m.cost_function(); }
   protected:
@@ -227,8 +237,91 @@ namespace mets {
     update(search_type* algorithm) = 0;
   };
 
+
+  template<typename neighborhood_t>
+  struct iteration_logger : public mets::search_listener<neighborhood_t>
+  {
+    explicit
+    iteration_logger(std::ostream& o) 
+      : mets::search_listener<neighborhood_t>(), 
+	iteration(0), 
+	os(o) 
+    { }
+    
+    void 
+    update(mets::abstract_search<neighborhood_t>* as) 
+    {
+      const mets::feasible_solution& p = as->working();
+      if(as->step() == mets::abstract_search<neighborhood_t>::MOVE_MADE)
+	{
+	  os << iteration++ << "\t" 
+	     << dynamic_cast<const mets::evaluable_solution&>(p).cost_function()
+	     << "\n";
+	}
+    }
+    
+  protected:
+    int iteration;
+    std::ostream& os;
+  };
+
+  template<typename neighborhood_t>
+  struct improvement_logger : public mets::search_listener<neighborhood_t>
+  {
+    explicit
+    improvement_logger(std::ostream& o, gol_type epsilon = 1e-7) 
+      : mets::search_listener<neighborhood_t>(), 
+	iteration_m(0), 
+	best_m(std::numeric_limits<double>::max()),
+	os_m(o),
+	epsilon_m(epsilon)
+    { }
+    
+    void 
+    update(mets::abstract_search<neighborhood_t>* as) 
+    {
+      const mets::feasible_solution& p = as->working();
+
+      if(as->step() == mets::abstract_search<neighborhood_t>::MOVE_MADE)
+	{
+	  iteration_m++;
+	  double val = dynamic_cast<const mets::evaluable_solution&>(p)
+	    .cost_function();
+	  if(val < best_m - epsilon_m) 
+	    {	     
+	      best_m = val;
+	      os_m << iteration_m << "\t" 
+		   << best_m
+		   << " (*)\n";
+	    }
+	}
+    }
+    
+  protected:
+    int iteration_m;
+    double best_m;
+    std::ostream& os_m;
+    gol_type epsilon_m;
+  };
+
   /// @}
 
 
 }
+
+inline mets::solution_recorder::~solution_recorder() 
+{ }
+
+inline bool
+mets::best_ever_solution::accept(const mets::feasible_solution& sol)
+{
+  const evaluable_solution& s = dynamic_cast<const mets::evaluable_solution&>(sol);
+  if(s.cost_function() < best_ever_m.cost_function())
+    {
+      best_ever_m.copy_from(s);
+      return true;
+    }
+  return false;
+}
+
 #endif

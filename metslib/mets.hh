@@ -29,7 +29,7 @@
 /// metaheuristics with or without memory.
 ///
 /// The solution instance must implement mets::feasible_solution and
-/// the moves must be implemented as mets::move classes.
+/// the moves must be derived from mets::move classes.
 ///
 /// The neighborhood can be specified implementing a
 /// mets::move_manager subclass or providing another class with the
@@ -44,7 +44,7 @@
 ///
 /// Once your model is set up you are free of experimenting different
 /// metaheuristics without changing it, but simply configuring one
-/// algorith or another.
+/// algorithm or another.
 ///
 /// Each algorithm can be customized implementing your own decorating
 /// classes, although a bunch of predefined and commonly used
@@ -55,9 +55,10 @@
 /// The framework you must implement your model into is made of:
 ///
 /// - mets::feasible_solution
+///   - mets::evaluable_solution (use this if you also use mets::best_ever_solution)
 ///   - mets::permutation_problem
 /// - mets::move
-///   - mets::mana_move
+///   - mets::mana_move (use this if you also use by mets::simple_tabu_list)
 ///   - mets::swap_elements
 ///
 /// The toolkit of implemented algorithms is made of:
@@ -67,14 +68,19 @@
 /// - mets::local_search
 /// - mets::simulated_annealing
 ///   - mets::abstract_cooling_schedule
+///   - mets::solution_recorder
+///     - mets::best_ever_solution
 ///   - mets::termination_criteria_chain
-///   - mets::noimprove_termination_criteria
-///   - mets::threshold_termination_criteria
+///     - mets::iteration_termination_criteria
+///     - mets::noimprove_termination_criteria
+///     - mets::threshold_termination_criteria
 /// - mets::tabu_search
 ///   - mets::tabu_list_chain
 ///     - mets::simple_tabu_list
 ///   - mets::aspiration_criteria_chain
 ///     - mets::best_ever_criteria
+///   - mets::solution_recorder
+///     - mets::best_ever_solution
 ///   - mets::termination_criteria_chain
 ///     - mets::iteration_termination_criteria
 ///     - mets::noimprove_termination_criteria
@@ -118,9 +124,6 @@
 /// Simulated Annealing, Iterated Local Search, Random Restart Local
 /// Search).
 ///
-namespace mets {
-  static const double epsilon = 1e-7;
-}
 
 #include "observer.hh"
 #include "model.hh"
@@ -131,6 +134,12 @@ namespace mets {
 #include "simulated-annealing.hh"
 
 
-std::ostream& operator<<(std::ostream& os, const mets::printable& p);
+//________________________________________________________________________
+inline std::ostream& 
+operator<<(std::ostream& os, const mets::printable& p)
+{
+  p.print(os);
+  return os;
+}
 
 #endif

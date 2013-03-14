@@ -1,3 +1,11 @@
+2013-03-14 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* *: changed constness of the moves and the solutions 
+    passed around. The mets::move_manager now iterates over
+    const mets::move*
+
+2011-05-05 Mirko Maischberger <mirko.maischberger@gmail.com>
+	* *: header only library (with fixed bugs)
+	
 2009-10-20 Mirko Maischberger <mirko.maischberger@gmail.com>
 	* debian/*: added packaging file for Debian. You can create deb
 	package for your GNU/Debian or derived distro using

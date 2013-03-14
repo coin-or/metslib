@@ -55,11 +55,11 @@ Complete API Documentation
     - http://www.coin-or.org/metslib/docs/
 
 
-Sample programs
----------------
+Tutorial 
+--------
 
-There is a quick Tabu Search tutorial here
-  - https://projects.coin-or.org/metslib/wiki/TabuSearchTutorial
+A METSlib Tutorial is available here:
+  - http://www.coin-or.org/metslib/docs/releases/0.5.2/metslib-tr.pdf
 
 You can also look in the distributed examples (in the Examples
 subproject in svn).
@@ -101,18 +101,18 @@ Cumming <murrayc@usa.net> and Cedric Gustin <gustin@pcpm.ucl.ac.be>
 If you use the library you should cite it in your work:
 =======================================================
 
-    - Mirko Maischberger, "METSlib metaheuristic framework version
-      0.4.3". [online] Available http://projects.coin-or.org/metslib,
-      (the date you visited the site)
+    - Mirko Maischberger, "COIN-OR METSlib, a Metaheuristics Framework
+      in Modern C++" April 2011
 
     BibTex Entry:
 
-@misc{metslib2008,
+@misc{metslib2011,
   author={Mirko Maischberger},
-  title={{METSlib} metaheuristic framework version 0.4.3},
-  month={October},
-  year={2009},
-  howpublished = {http://projects.coin-or.org/metslib},
+  title={{COIN-OR} {METSlib}, a Metaheuristics Framework
+      in Modern C++},
+  month={April},
+  year={2011},
+  howpublished = {http://www.coin-or.org/metslib/docs/releases/0.5.2/metslib-tr.pdf},
 }
 
 - Mirko Maischberger
