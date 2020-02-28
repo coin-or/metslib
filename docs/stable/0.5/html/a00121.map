@@ -1,0 +1,5 @@
+<map id="G" name="G">
+<area shape="rect" href="$a00013.html" title="Generates a the full subsequence inversion neighborhood." alt="" coords="5,281,203,407"/>
+<area shape="rect" href="$a00034.html" title="Generates a the full swap neighborhood." alt="" coords="227,281,421,407"/>
+<area shape="rect" href="$a00035.html" title="Generates a stochastic subset of the neighborhood." alt="" coords="445,253,744,435"/>
+</map>

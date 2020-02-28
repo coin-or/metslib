@@ -1,0 +1,6 @@
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$a00012.html" title="{mets::forever\n||+ forever()\l+ operator()()\l+ reset()\l}" alt="" coords="5,331,104,458"/>
+<area shape="rect" id="node5" href="$a00018.html" title="Termination criteria based on the number of iterations." alt="" coords="128,313,349,477"/>
+<area shape="rect" id="node7" href="$a00026.html" title="Termination criteria based on the number of iterations without an improvement." alt="" coords="373,238,608,551"/>
+<area shape="rect" id="node9" href="$a00042.html" title="Termination criteria based on cost value." alt="" coords="632,313,861,477"/>
+</map>

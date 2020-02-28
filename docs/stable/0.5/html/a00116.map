@@ -1,0 +1,6 @@
+<map id="G" name="G">
+<area shape="rect" href="$a00018.html" title="A Mana Move is a move that can be automatically made tabu by the mets::simple_tabu_list..." alt="" coords="109,179,237,285"/>
+<area shape="rect" href="$a00020.html" title="Move to be operated on a feasible solution." alt="" coords="5,5,96,131"/>
+<area shape="rect" href="$a00006.html" title="An interface for prototype objects." alt="" coords="120,15,227,121"/>
+<area shape="rect" href="$a00012.html" title="An interface for hashable objects." alt="" coords="251,15,360,121"/>
+</map>

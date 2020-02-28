@@ -1,0 +1,6 @@
+<map id="G" name="G">
+<area shape="rect" id="node1" href="$a00027.html" title="mets::observer\&lt; abstract_search\&lt; neighborhood_t \&gt; \&gt;" alt="" coords="5,31,344,62"/>
+<area shape="rect" id="node3" href="$a00030.html" title="mets::search_listener\&lt; neighborhood_t \&gt;" alt="" coords="392,31,651,62"/>
+<area shape="rect" id="node5" href="$a00014.html" title="mets::improvement_logger\&lt; neighborhood_t \&gt;" alt="" coords="699,5,987,35"/>
+<area shape="rect" id="node7" href="$a00017.html" title="mets::iteration_logger\&lt; neighborhood_t \&gt;" alt="" coords="713,58,972,89"/>
+</map>

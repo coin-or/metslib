@@ -1,0 +1,4 @@
+<map id="G" name="G">
+<area shape="rect" id="node2" href="$a00030.html" title="{mets::search_listener\&lt; neighborhood_t \&gt;\n||+ search_listener()\l+ search_listener()\l+ operator=()\l+ ~search_listener()\l+ update()\l}" alt="" coords="45,182,304,346"/>
+<area shape="rect" id="node4" href="$a00027.html" title="{mets::observer\&lt; abstract_search\&lt; neighborhood_t \&gt; \&gt;\n||+ ~observer()\l+ update()\l# observer()\l}" alt="" coords="5,6,344,133"/>
+</map>

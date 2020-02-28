@@ -1,0 +1,5 @@
+<map id="G" name="G">
+<area shape="rect" href="$a00018.html" title="A Mana Move is a move that can be automatically made tabu by the mets::simple_tabu_list..." alt="" coords="120,160,248,267"/>
+<area shape="rect" href="$a00014.html" title="A mets::mana_move that swaps a subsequence of elements in a mets::permutation_problem..." alt="" coords="5,315,179,533"/>
+<area shape="rect" href="$a00033.html" title="A mets::mana_move that swaps two elements in a mets::permutation_problem." alt="" coords="203,315,349,533"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="G" name="G">
+<area shape="rect" href="$a00002.html" title="An abstract search." alt="" coords="345,600,641,987"/>
+<area shape="rect" href="$a00032.html" title="{mets::subject\&lt; abstract_search\&lt; move_manager_type \&gt; \&gt;\n|# observers_m\l|+ ~subject()\l+ attach()\l+ detach()\l+ notify()\l# subject()\l}" alt="" coords="29,361,392,524"/>
+<area shape="rect" href="$a00024.html" title="{mets::observer\&lt; abstract_search\&lt; move_manager_type \&gt; \&gt;\n||+ ~observer()\l+ update()\l# observer()\l}" alt="" coords="25,5,396,131"/>
+<area shape="rect" href="$a00011.html" title="interface of a feasible solution space to be searched with tabu search." alt="" coords="416,399,571,487"/>
+<area shape="rect" href="$a00031.html" title="The solution recorder is used by search algorithm, at the end of each iteration,..." alt="" coords="595,352,752,533"/>
+</map>
