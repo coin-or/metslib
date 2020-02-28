@@ -46,20 +46,20 @@ more than one time.
 This OO library was inspired by the OTS library released by the
 Coin-OR project.
 
-You may want to read http://projects.coin-or.org/metslib
+You may want to read https://github.coin/coin-or/metslib
 
 
 Complete API Documentation
 --------------------------
 
-    - http://www.coin-or.org/metslib/docs/
+    - https://coin-or.github.io/metslib/docs/stable/0.5/html/
 
 
 Tutorial 
 --------
 
 A METSlib Tutorial is available here:
-  - http://www.coin-or.org/metslib/docs/releases/0.5.2/metslib-tr.pdf
+  - https://coin-or.github.io/metslib/docs/stable/0.5/metslib-tr.pdf
 
 You can also look in the distributed examples (in the Examples
 subproject in svn).
@@ -112,7 +112,7 @@ If you use the library you should cite it in your work:
       in Modern C++},
   month={April},
   year={2011},
-  howpublished = {http://www.coin-or.org/metslib/docs/releases/0.5.2/metslib-tr.pdf},
+  howpublished = {https://coin-or.github.io/metslib/docs/stable/0.5/metslib-tr.pdf},
 }
 
 - Mirko Maischberger
