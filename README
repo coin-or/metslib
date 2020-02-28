@@ -61,9 +61,8 @@ Tutorial
 A METSlib Tutorial is available here:
   - https://coin-or.github.io/metslib/docs/stable/0.5/metslib-tr.pdf
 
-You can also look in the distributed examples (in the Examples
-subproject in svn).
-   
+You can also look in the distributed examples in project
+https://github.com/coin-or/metslib-examples.
 
 Contact Information
 -------------------
